@@ -7,7 +7,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-include_directories(include)
+# boost
+find_package(Boost COMPONENTS program_options REQUIRED)
 
 # opencv
 find_package(OpenCV REQUIRED core imgproc imgcodecs highgui)
@@ -31,6 +32,8 @@ find_package(glfw3 3.2 REQUIRED)
 # glm
 find_package(glm REQUIRED)
 
+include_directories(include)
+
 # panoramagrid
 foreach (CLASS camera cubemapmaterial cubemesh grid material mesh node renderer)
     set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} src/${CLASS}.cpp include/panoramagrid/${CLASS}.hpp)
@@ -42,9 +45,18 @@ set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} include/panoramagrid/utilities.hpp)  # 
 set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} include/panoramagrid/gl/utilities.hpp)  # gl utilities
 set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} include/panoramagrid/panoramagrid.hpp include/panoramagrid/gl/gl.hpp)  # all-in-one headers
 add_library(panoramagrid SHARED ${PANORAMAGRID_SRC})
-target_include_directories(panoramagrid PUBLIC ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(panoramagrid ${OpenCV_LIBS} glad glm)
+target_include_directories(panoramagrid PUBLIC ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(panoramagrid ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} glad glm zip)
 
 # cubemapviewer
 add_executable(cubemapviewer tools/cubemapviewer.cpp)
 target_link_libraries(cubemapviewer dl glad glfw panoramagrid)
+
+# gridtest
+add_executable(gridtest tools/gridtest.cpp)
+target_link_libraries(gridtest dl glad glfw panoramagrid)
+
+# cubemapstitch
+add_executable(cubemapstitch tools/cubemapstitch.cpp)
+target_include_directories(cubemapstitch PUBLIC ${Boost_INCLUDE_DIRS})
+target_link_libraries(cubemapstitch dl ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
