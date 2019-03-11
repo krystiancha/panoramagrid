@@ -37,6 +37,7 @@ namespace panoramagrid::gl::applications {
         std::vector<std::shared_ptr<Node>> nodes;
         GLFWwindow *window;
         std::shared_ptr<Renderer> renderer;
+        boost::program_options::variables_map vm;
 
     private:
         void initCallbacks();

@@ -11,7 +11,6 @@ int main(int argc, char *argv[]) {
 
     pg::gl::applications::CubemapViewer::initGlfw();
     app.initContext();
-    app.loadCubemap(argv[2]);
 
     app.run();
 

@@ -78,9 +78,8 @@ void panoramagrid::gl::applications::CubemapViewer::scrollCallback(double xoffse
     );
 }
 
-void panoramagrid::gl::applications::CubemapViewer::loadCubemap(std::string filename) {
-
-    cubeNode->getMaterial()->setTexture(cv::imread(filename));
+void panoramagrid::gl::applications::CubemapViewer::loadCubemap() {
+    cubeNode->getMaterial()->setTexture(cv::imread(inputFile));
     getRenderer()->render(cubeNode);
     getRenderer()->loadTexture(cubeNode->getMaterial());
 }
@@ -95,6 +94,8 @@ void panoramagrid::gl::applications::CubemapViewer::initContext() {
 }
 
 void panoramagrid::gl::applications::CubemapViewer::run() {
+    loadCubemap();
+
     glEnable(GL_DEPTH_TEST);
 
     while (!glfwWindowShouldClose(window)) {
@@ -112,9 +113,14 @@ void panoramagrid::gl::applications::CubemapViewer::run() {
 
 void panoramagrid::gl::applications::CubemapViewer::parseArgs(int argc, char **argv) {
     boost::program_options::options_description opt("Allowed options");
-    opt.add_options()("input", boost::program_options::value<std::string>()->required());
-
+    opt.add_options()("input,i", boost::program_options::value<std::string>()->required());
     options.add(opt);
 
     GlApplication::parseArgs(argc, argv);
+
+    try {
+        inputFile = vm["input"].as<std::string>();
+    } catch (boost::bad_any_cast &e) {
+        throw std::runtime_error("Bad input filename");
+    }
 }

@@ -1,23 +1,29 @@
 #include <panoramagrid/gl/applications/glapplication.hpp>
 #include <panoramagrid/gl/glrenderer.hpp>
+#include <iostream>
 
 namespace panoramagrid::gl::applications {
 
     void GlApplication::parseArgs(int argc, char **argv) {
         boost::program_options::options_description opt("Allowed options");
         opt.add_options()
+            ("help,h", "Print help")
             ("width", boost::program_options::value<int>()->default_value(1280))
             ("height", boost::program_options::value<int>()->default_value(720));
 
         options.add(opt);
 
-        boost::program_options::variables_map vm;
         boost::program_options::store(
             boost::program_options::command_line_parser(argc, argv)
                 .options(options)
                 .positional(positionalOptions)
                 .run(),
             vm);
+
+        if (vm.count("help")) {
+            std::cout << opt << std::endl;
+            exit(0);
+        }
 
         renderer = std::make_shared<GlRenderer>(
             vm["width"].as<int>(),

@@ -14,8 +14,6 @@ namespace panoramagrid::gl::applications {
 
         void initContext() override;
 
-        void loadCubemap(std::string filename);
-
         void run() override;
 
         void framebufferSizeCallback(int width, int height) override;
@@ -31,9 +29,11 @@ namespace panoramagrid::gl::applications {
     protected:
         double lastCursorX = 0, lastCursorY = 0;
         double cursorSensitivity = 0.002, scrollSensitivity = 0.05;
-
+        std::string inputFile = "";
         std::shared_ptr<Node> cubeNode = std::make_shared<Node>(std::make_shared<CubeMesh>(),
             std::make_shared<CubemapMaterial>());
+
+        void loadCubemap();
     };
 
 }
