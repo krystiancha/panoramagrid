@@ -41,8 +41,9 @@ endforeach ()
 foreach (CLASS glrenderer shader)
     set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} src/${CLASS}.cpp include/panoramagrid/gl/${CLASS}.hpp)
 endforeach ()
-set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} include/panoramagrid/utilities.hpp)  # utilities
-set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} include/panoramagrid/gl/utilities.hpp)  # gl utilities
+foreach (CLASS cubemapviewer glapplication)
+    set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} src/${CLASS}.cpp include/panoramagrid/gl/applications/${CLASS}.hpp)
+endforeach ()
 set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} include/panoramagrid/panoramagrid.hpp include/panoramagrid/gl/gl.hpp)  # all-in-one headers
 add_library(panoramagrid SHARED ${PANORAMAGRID_SRC})
 target_include_directories(panoramagrid PUBLIC ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})

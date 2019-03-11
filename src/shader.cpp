@@ -58,7 +58,7 @@ namespace panoramagrid::gl {
     GLint Shader::getUniformLocation(const GLchar *name) {
         GLint uniform = glGetUniformLocation(program, name);
         if (uniform == -1) {
-            throw std::logic_error("The name does not correspond to an active uniform variable in the program.");
+            throw std::logic_error("The name does not correspond to an active uniform variable in the program");
         }
         return uniform;
     }

@@ -10,7 +10,7 @@ namespace panoramagrid {
 
     class Renderer {
     public:
-        Renderer(int width, int height, const std::shared_ptr<Camera> &camera);
+        Renderer(int width, int height);
 
         virtual ~Renderer() = default;
 
@@ -22,7 +22,11 @@ namespace panoramagrid {
 
         int getWidth() const;
 
+        void setWidth(int width);
+
         int getHeight() const;
+
+        void setHeight(int height);
 
     private:
         int width, height;

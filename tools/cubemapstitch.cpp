@@ -19,8 +19,7 @@ int main(int argc, char *argv[]) {
     po::options_description standardOptions("Allowed options");
     standardOptions.add_options()
         ("help,h", "produce help message")
-        ("output,o", po::value<std::string>()->default_value("cubemap.jpg"), "Name of the output file")
-    ;
+        ("output,o", po::value<std::string>()->default_value("cubemap.jpg"), "Name of the output file");
     options.add(standardOptions);
 
     po::options_description hiddenOptions("Hidden options");
@@ -55,21 +54,22 @@ int main(int argc, char *argv[]) {
         auto filename = vm[sideNames[i]].as<std::string>();
         sides[i] = cv::imread(filename);
         if (sides[i].empty()) {
-            throw std::logic_error("Could not open file: " + filename);
+            throw std::runtime_error("Could not open file: " + filename);
         }
         if (i == 0) {
             sideDim = sides[i].cols;
             if (sides[i].rows != sideDim) {
-                throw std::logic_error("Cube sides have to be square");
+                throw std::runtime_error("Cube sides have to be square");
             }
         } else if (sides[i].cols != sideDim || sides[i].rows != sideDim) {
-            throw std::logic_error("All cube sides have to be the same size");
+            throw std::runtime_error("All cube sides have to be the same size");
         }
     }
 
-    cv::Mat cubemap(3 * sideDim,  4 * sideDim, CV_8UC3, cv::Scalar(0, 0, 0));
+    cv::Mat cubemap(3 * sideDim, 4 * sideDim, CV_8UC3, cv::Scalar(0, 0, 0));
     for (int i = 0; i < 6; ++i) {
-        sides[i].copyTo(cubemap(cv::Rect(sideLocation[i].first * sideDim, sideLocation[i].second * sideDim, sideDim, sideDim)));
+        sides[i].copyTo(
+            cubemap(cv::Rect(sideLocation[i].first * sideDim, sideLocation[i].second * sideDim, sideDim, sideDim)));
     }
 
     cv::imwrite(vm["output"].as<std::string>(), cubemap);

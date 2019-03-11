@@ -11,11 +11,9 @@ namespace panoramagrid {
     public:
         Camera(const Camera &) = default;
 
-        explicit Camera(
+        explicit Camera(float aspectRatio = 4.0f / 3.0f, float fov = M_PI_2f32,
             const std::array<float, 3> &position = {0, 0, 0},
-            const std::array<float, 3> &orientation = {0, 0, 0}, float fov = M_PI_2f32,
-            float aspectRatio = 4.0f / 3.0f
-        );
+            const std::array<float, 3> &orientation = {0, 0, 0});
 
         const std::array<float, 3> &getPosition() const;
 
@@ -34,7 +32,6 @@ namespace panoramagrid {
         void setAspectRatio(float aspectRatio);
 
     private:
-
         std::array<float, 3> position;
         std::array<float, 3> orientation;
         float fov;

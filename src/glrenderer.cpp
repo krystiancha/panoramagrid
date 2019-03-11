@@ -3,8 +3,8 @@
 
 namespace panoramagrid::gl {
 
-    GlRenderer::GlRenderer(int width, int height, const std::shared_ptr<panoramagrid::Camera> &camera)
-        : Renderer(width, height, camera) {}
+    GlRenderer::GlRenderer(int width, int height)
+        : Renderer(width, height) {}
 
     void GlRenderer::render(std::shared_ptr<panoramagrid::Node> node) {
         bindVao(node->getMesh());
@@ -104,7 +104,7 @@ namespace panoramagrid::gl {
             shader = shaders.at(material);
         } catch (std::out_of_range &e) {
             if (!material->isCubemap()) {
-                throw std::logic_error("Not implemented");
+                throw std::invalid_argument("Not implemented");
             }
             shader = std::make_shared<Shader>(R"glsl(
                 #version 450 core
@@ -140,7 +140,7 @@ namespace panoramagrid::gl {
 
     void GlRenderer::bindTextureUnit(std::shared_ptr<Material> material) {
         if (!material->isCubemap()) {
-            throw std::logic_error("Not implemented");
+            throw std::invalid_argument("Not implemented");
         }
 
         GLenum textureUnit;
@@ -162,7 +162,7 @@ namespace panoramagrid::gl {
                 }
             }
             if (!found) {
-                throw std::logic_error("There are no free texture units left");
+                throw std::runtime_error("There are no free texture units left");
             }
             textureUnit = static_cast<GLenum>(GL_TEXTURE0 + i);
 
@@ -180,13 +180,13 @@ namespace panoramagrid::gl {
 
     void GlRenderer::loadTexture(std::shared_ptr<Material> material) {
         if (!material->isCubemap()) {
-            throw std::logic_error("Not implemented");
+            throw std::invalid_argument("Not implemented");
         }
 
         cv::Mat cubemap = material->getTexture();
         int sideDim = cubemap.cols / 4;
         if (sideDim != cubemap.rows / 3) {
-            throw std::logic_error("Invalid cubemap format.");
+            throw std::runtime_error("Invalid cubemap format");
         }
 
         GLint alignment, rowLength;
@@ -217,10 +217,6 @@ namespace panoramagrid::gl {
 
     glm::vec3 GlRenderer::toGlm(std::array<float, 3> vector) {
         return glm::vec3(vector[0], vector[1], vector[2]);
-    }
-
-    glm::quat GlRenderer::toGlm(std::array<float, 4> quaternion) {
-        return glm::quat(quaternion[3], quaternion[0], quaternion[1], quaternion[2]);
     }
 
 }

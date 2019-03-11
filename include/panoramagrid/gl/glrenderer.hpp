@@ -6,7 +6,6 @@
 #define GLM_FORCE_LEFT_HANDED
 
 #include <map>
-#include <glad/glad.h>
 #include <panoramagrid/gl/shader.hpp>
 #include <panoramagrid/renderer.hpp>
 #include <glm/glm.hpp>
@@ -21,7 +20,7 @@ namespace panoramagrid::gl {
 
     class GlRenderer : public Renderer {
     public:
-        GlRenderer(int width, int height, const std::shared_ptr<Camera> &camera);
+        GlRenderer(int width, int height);
 
         void render(std::shared_ptr<Node> node) override;
 
@@ -32,8 +31,6 @@ namespace panoramagrid::gl {
         void loadTexture(std::shared_ptr<Material> material) override;
 
         static glm::vec3 toGlm(std::array<float, 3> vector);
-
-        static glm::quat toGlm(std::array<float, 4> quaternion);
 
     private:
         GLuint boundVao = 0;
