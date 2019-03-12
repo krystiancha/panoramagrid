@@ -1,3 +1,8 @@
+/*!
+ * The cubemapstitch application joins six cube face images to a single cubemap using a layout that is compatible with
+ * the panoramagrid API.
+ */
+
 #include <boost/program_options.hpp>
 #include <opencv2/opencv.hpp>
 
@@ -47,7 +52,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    cv::Mat sides[6];
+    cv::Mat sides[6];https://github.com/
     int sideDim;
 
     for (int i = 0; i < 6; ++i) {
