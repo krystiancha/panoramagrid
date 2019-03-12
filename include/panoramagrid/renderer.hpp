@@ -28,6 +28,8 @@ namespace panoramagrid {
 
         void setHeight(int height);
 
+        virtual cv::Mat getMat() = 0;
+
     private:
         int width, height;
         std::shared_ptr<Camera> camera;

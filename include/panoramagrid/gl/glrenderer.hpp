@@ -32,6 +32,8 @@ namespace panoramagrid::gl {
 
         static glm::vec3 toGlm(std::array<float, 3> vector);
 
+        cv::Mat getMat() override;
+
     private:
         GLuint boundVao = 0;
         std::shared_ptr<Shader> usedShader = nullptr;

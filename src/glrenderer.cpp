@@ -219,4 +219,14 @@ namespace panoramagrid::gl {
         return glm::vec3(vector[0], vector[1], vector[2]);
     }
 
+    cv::Mat GlRenderer::getMat() {
+        cv::Mat mat(getHeight(), getWidth(), CV_8UC3);
+
+        glPixelStorei(GL_PACK_ALIGNMENT, (mat.step & 3) ? 1 : 4);
+        glPixelStorei(GL_PACK_ROW_LENGTH, static_cast<GLint>(mat.step / mat.elemSize()));
+        glReadPixels(0, 0, mat.cols, mat.rows, GL_BGR, GL_UNSIGNED_BYTE, mat.data);
+        cv::flip(mat, mat, 0);
+        return mat;
+    }
+
 }
