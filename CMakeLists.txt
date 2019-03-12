@@ -53,11 +53,12 @@ target_link_libraries(panoramagrid ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} glad g
 add_executable(cubemapviewer tools/cubemapviewer.cpp)
 target_link_libraries(cubemapviewer dl glad glfw panoramagrid)
 
-# gridtest
-add_executable(gridtest tools/gridtest.cpp)
-target_link_libraries(gridtest dl glad glfw panoramagrid)
-
 # cubemapstitch
 add_executable(cubemapstitch tools/cubemapstitch.cpp)
 target_include_directories(cubemapstitch PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(cubemapstitch dl ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
+
+install (TARGETS panoramagrid DESTINATION lib)
+install (TARGETS cubemapviewer cubemapstitch DESTINATION bin)
+file(GLOB PANORAMAGRID_HEADERS include/panoramagrid/**.hpp)
+install (FILES ${PANORAMAGRID_HEADERS} DESTINATION include)
