@@ -11,9 +11,9 @@ namespace panoramagrid::gl::applications {
 
     class GlApplication {
     public:
-        virtual void parseArgs(int argc, char **argv);
-
         static void initGlfw();
+
+        virtual void parseArgs(int argc, char **argv);
 
         virtual void initContext();
 

@@ -12,13 +12,13 @@ namespace panoramagrid::gl {
     public:
         Shader(const std::string &vertexShaderSource, const std::string &fragmentShaderSource);
 
+        void use();
+
         template<GLenum T>
         const std::string getShaderSource() const;
 
         template<GLenum T>
         void setShaderSource(const std::string &source);
-
-        void use();
 
         GLint getUniformLocation(const GLchar *name);
 

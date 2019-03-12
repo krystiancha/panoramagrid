@@ -24,13 +24,7 @@ namespace panoramagrid::gl {
 
         void render(std::shared_ptr<Node> node) override;
 
-        GLenum getDrawMethod(Mesh::DrawMethod method);
-
-        std::map<GLenum, std::pair<int, int>> getCubemapSides();
-
         void loadTexture(std::shared_ptr<Material> material) override;
-
-        static glm::vec3 toGlm(std::array<float, 3> vector);
 
         cv::Mat getMat() override;
 
@@ -42,11 +36,17 @@ namespace panoramagrid::gl {
         std::map<std::shared_ptr<Material>, GLenum> textureUnits;
         std::map<std::shared_ptr<Material>, GLenum> textures;
 
+        static glm::vec3 toGlm(std::array<float, 3> vector);
+
         void bindVao(std::shared_ptr<Mesh> mesh);
 
         void useShader(std::shared_ptr<Material> material);
 
         void bindTextureUnit(std::shared_ptr<Material> material);
+
+        std::map<GLenum, std::pair<int, int>> getCubemapSides();
+
+        GLenum getDrawMethod(Mesh::DrawMethod method);
     };
 
 }
