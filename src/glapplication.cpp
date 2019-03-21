@@ -9,7 +9,8 @@ namespace panoramagrid::gl::applications {
         opt.add_options()
             ("help,h", "Print help")
             ("width", boost::program_options::value<int>()->default_value(1280))
-            ("height", boost::program_options::value<int>()->default_value(720));
+            ("height", boost::program_options::value<int>()->default_value(720))
+            ("fullscreen,f", "View in fullscreen");
 
         options.add(opt);
 
@@ -45,7 +46,7 @@ namespace panoramagrid::gl::applications {
             renderer->getWidth(),
             renderer->getHeight(),
             "Cubemap Viewer",
-            nullptr,
+            vm.count("fullscreen") ? glfwGetPrimaryMonitor() : nullptr,
             nullptr
         );
         glfwSetWindowUserPointer(window, this);
