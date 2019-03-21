@@ -32,7 +32,10 @@ namespace panoramagrid::gl {
     }
 
     GLenum GlRenderer::getDrawMethod(Mesh::DrawMethod method) {
-        return std::map<Mesh::DrawMethod, GLenum>{{Mesh::DrawMethod::TRIANGLE_STRIP, GL_TRIANGLE_STRIP},}.at(method);
+        return std::map<Mesh::DrawMethod, GLenum>{
+            {Mesh::DrawMethod::TRIANGLE_STRIP, GL_TRIANGLE_STRIP},
+            {Mesh::DrawMethod::TRIANGLES,      GL_TRIANGLES},
+        }.at(method);
     }
 
     std::map<GLenum, std::pair<int, int>> GlRenderer::getCubemapSides() {
@@ -103,10 +106,8 @@ namespace panoramagrid::gl {
         try {
             shader = shaders.at(material);
         } catch (std::out_of_range &e) {
-            if (!material->isCubemap()) {
-                throw std::invalid_argument("Not implemented");
-            }
-            shader = std::make_shared<Shader>(R"glsl(
+            if (material->isCubemap()) {
+                shader = std::make_shared<Shader>(R"glsl(
                 #version 450 core
                 layout (location = 0) in vec3 position;
                 layout (location = 1) in vec2 texcoord;
@@ -130,6 +131,32 @@ namespace panoramagrid::gl {
                     color = texture(sampler, TexCoord);
                 }
                 )glsl");
+            } else {
+                shader = std::make_shared<Shader>(R"glsl(
+                #version 450 core
+                layout (location = 0) in vec3 position;
+                layout (location = 1) in vec2 texcoord;
+                uniform mat4 mvp;
+                uniform bool skybox;
+                out vec3 TexCoord;
+                void main() {
+                    vec4 pos = mvp * vec4(position, 1);
+                    gl_Position = pos;
+                    if (skybox) {
+                        gl_Position = pos.xyww;
+                    }
+                    TexCoord = vec3(texcoord, 0);
+                }
+                )glsl", R"glsl(
+                #version 450 core
+                in vec3 TexCoord;
+                uniform sampler2D sampler;
+                out vec4 color;
+                void main() {
+                    color = texture(sampler, TexCoord.xy);
+                }
+                )glsl");
+            }
         }
 
         if (usedShader != shader) {
@@ -139,10 +166,6 @@ namespace panoramagrid::gl {
     }
 
     void GlRenderer::bindTextureUnit(std::shared_ptr<Material> material) {
-        if (!material->isCubemap()) {
-            throw std::invalid_argument("Not implemented");
-        }
-
         GLenum textureUnit;
 
         try {
@@ -170,7 +193,7 @@ namespace panoramagrid::gl {
 
             GLuint texture;
             glGenTextures(1, &texture);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+            glBindTexture(material->isCubemap() ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D, texture);
 
             textureUnits[material] = textureUnit;
         }
@@ -179,40 +202,48 @@ namespace panoramagrid::gl {
     }
 
     void GlRenderer::loadTexture(std::shared_ptr<Material> material) {
-        if (!material->isCubemap()) {
-            throw std::invalid_argument("Not implemented");
-        }
-
-        cv::Mat cubemap = material->getTexture();
-        int sideDim = cubemap.cols / 4;
-        if (sideDim != cubemap.rows / 3) {
-            throw std::runtime_error("Invalid cubemap format");
-        }
+        cv::Mat texture = material->getTexture();
 
         GLint alignment, rowLength;
         glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
         glGetIntegerv(GL_UNPACK_ROW_LENGTH, &rowLength);
 
-        glPixelStorei(GL_UNPACK_ALIGNMENT, (cubemap.step & 3) ? 1 : 4);
-        glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint) (cubemap.step / cubemap.elemSize()));
+        glPixelStorei(GL_UNPACK_ALIGNMENT, (texture.step & 3) ? 1 : 4);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, (GLint) (texture.step / texture.elemSize()));
 
-        for (auto element : getCubemapSides()) {
-            cv::Mat side = cubemap(
-                cv::Rect(element.second.first * sideDim, element.second.second * sideDim, sideDim, sideDim));
+        if (material->isCubemap()) {
+            int sideDim = texture.cols / 4;
+            if (sideDim != texture.rows / 3) {
+                throw std::runtime_error("Invalid cubemap format");
+            }
 
-            glTexImage2D(element.first, 0, GL_RGB, sideDim, sideDim, 0, GL_BGR, GL_UNSIGNED_BYTE, side.ptr());
+            for (auto element : getCubemapSides()) {
+                cv::Mat side = texture(
+                    cv::Rect(element.second.first * sideDim, element.second.second * sideDim, sideDim, sideDim));
+
+                glTexImage2D(element.first, 0, GL_RGB, sideDim, sideDim, 0, GL_BGR, GL_UNSIGNED_BYTE, side.ptr());
+            }
+
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        } else {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture.cols, texture.rows, 0, GL_BGR, GL_UNSIGNED_BYTE,
+                texture.ptr());
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
         }
 
         glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, rowLength);
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-        glUniform1i(usedShader->getUniformLocation("skybox"), material->isCubemap());
+        glUniform1i(usedShader->getUniformLocation("skybox"), false);
     }
 
     glm::vec3 GlRenderer::toGlm(std::array<float, 3> vector) {

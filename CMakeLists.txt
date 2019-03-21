@@ -35,13 +35,13 @@ find_package(glm REQUIRED)
 include_directories(include)
 
 # panoramagrid
-foreach (CLASS camera cubemapmaterial cubemesh grid material mesh node renderer)
+foreach (CLASS camera cubemapmaterial cubemesh grid material mesh node renderer spheremesh uvmaterial)
     set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} src/${CLASS}.cpp include/panoramagrid/${CLASS}.hpp)
 endforeach ()
 foreach (CLASS glrenderer shader)
     set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} src/${CLASS}.cpp include/panoramagrid/gl/${CLASS}.hpp)
 endforeach ()
-foreach (CLASS cubemapviewer glapplication)
+foreach (CLASS cubemapviewer equirectviewer glapplication)
     set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} src/${CLASS}.cpp include/panoramagrid/gl/applications/${CLASS}.hpp)
 endforeach ()
 set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} include/panoramagrid/panoramagrid.hpp include/panoramagrid/gl/gl.hpp)  # all-in-one headers
@@ -57,6 +57,10 @@ target_link_libraries(cubemapviewer dl glad glfw panoramagrid)
 add_executable(cubemapstitch tools/cubemapstitch.cpp)
 target_include_directories(cubemapstitch PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(cubemapstitch dl ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
+
+# equirectviewer
+add_executable(equirectviewer tools/equirectviewer.cpp)
+target_link_libraries(equirectviewer dl glad glfw panoramagrid)
 
 install (TARGETS panoramagrid DESTINATION lib)
 install (TARGETS cubemapviewer cubemapstitch DESTINATION bin)

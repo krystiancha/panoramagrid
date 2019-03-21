@@ -1,8 +1,7 @@
-#include <panoramagrid/gl/applications/cubemapviewer.hpp>
+#include <panoramagrid/gl/applications/equirectviewer.hpp>
 #include <boost/algorithm/clamp.hpp>
-#include <opencv2/opencv.hpp>
 
-void panoramagrid::gl::applications::CubemapViewer::framebufferSizeCallback(int width, int height) {
+void panoramagrid::gl::applications::EquirectViewer::framebufferSizeCallback(int width, int height) {
     GlApplication::framebufferSizeCallback(width, height);
     glViewport(0, 0, width, height);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -13,7 +12,7 @@ void panoramagrid::gl::applications::CubemapViewer::framebufferSizeCallback(int 
 }
 
 void
-panoramagrid::gl::applications::CubemapViewer::keyCallback(int key, int scancode, int action, int mods) {
+panoramagrid::gl::applications::EquirectViewer::keyCallback(int key, int scancode, int action, int mods) {
     GlApplication::keyCallback(key, scancode, action, mods);
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
@@ -27,7 +26,7 @@ panoramagrid::gl::applications::CubemapViewer::keyCallback(int key, int scancode
     }
 }
 
-void panoramagrid::gl::applications::CubemapViewer::cursorPosCallback(double xpos, double ypos) {
+void panoramagrid::gl::applications::EquirectViewer::cursorPosCallback(double xpos, double ypos) {
     GlApplication::cursorPosCallback(xpos, ypos);
 
     if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED) {
@@ -50,7 +49,7 @@ void panoramagrid::gl::applications::CubemapViewer::cursorPosCallback(double xpo
     lastCursorY = ypos;
 }
 
-void panoramagrid::gl::applications::CubemapViewer::mouseButtonCallback(int button, int action, int mods) {
+void panoramagrid::gl::applications::EquirectViewer::mouseButtonCallback(int button, int action, int mods) {
     GlApplication::mouseButtonCallback(button, action, mods);
 
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
@@ -60,7 +59,7 @@ void panoramagrid::gl::applications::CubemapViewer::mouseButtonCallback(int butt
     }
 }
 
-void panoramagrid::gl::applications::CubemapViewer::scrollCallback(double xoffset, double yoffset) {
+void panoramagrid::gl::applications::EquirectViewer::scrollCallback(double xoffset, double yoffset) {
     GlApplication::scrollCallback(xoffset, yoffset);
 
     if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED) {
@@ -78,13 +77,13 @@ void panoramagrid::gl::applications::CubemapViewer::scrollCallback(double xoffse
     );
 }
 
-void panoramagrid::gl::applications::CubemapViewer::loadTexture() {
+void panoramagrid::gl::applications::EquirectViewer::loadTexture() {
     node->getMaterial()->setTexture(cv::imread(inputFile));
     getRenderer()->render(node);
     getRenderer()->loadTexture(node->getMaterial());
 }
 
-void panoramagrid::gl::applications::CubemapViewer::initContext() {
+void panoramagrid::gl::applications::EquirectViewer::initContext() {
     GlApplication::initContext();
     nodes.push_back(node);
 
@@ -93,7 +92,7 @@ void panoramagrid::gl::applications::CubemapViewer::initContext() {
     glfwSwapInterval(1);
 }
 
-void panoramagrid::gl::applications::CubemapViewer::run() {
+void panoramagrid::gl::applications::EquirectViewer::run() {
     loadTexture();
 
     glEnable(GL_DEPTH_TEST);
@@ -111,7 +110,7 @@ void panoramagrid::gl::applications::CubemapViewer::run() {
     }
 }
 
-void panoramagrid::gl::applications::CubemapViewer::parseArgs(int argc, char **argv) {
+void panoramagrid::gl::applications::EquirectViewer::parseArgs(int argc, char **argv) {
     boost::program_options::options_description opt("Allowed options");
     opt.add_options()("input,i", boost::program_options::value<std::string>()->required());
     options.add(opt);

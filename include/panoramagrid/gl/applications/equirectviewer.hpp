@@ -1,14 +1,17 @@
-#ifndef PANORAMAGRID_CUBEMAPVIEWERGLAPPLICATION_HPP
-#define PANORAMAGRID_CUBEMAPVIEWERGLAPPLICATION_HPP
+#ifndef PANORAMAGRID_EQUIRECTVIEWER_HPP
+#define PANORAMAGRID_EQUIRECTVIEWER_HPP
 
 
+#include <string>
+#include <panoramagrid/node.hpp>
+#include <panoramagrid/panoramagrid.hpp>
+#include <panoramagrid/spheremesh.hpp>
+#include <panoramagrid/uvmaterial.hpp>
 #include <panoramagrid/gl/applications/glapplication.hpp>
-#include <panoramagrid/cubemesh.hpp>
-#include <panoramagrid/cubemapmaterial.hpp>
 
 namespace panoramagrid::gl::applications {
 
-    class CubemapViewer : public GlApplication {
+    class EquirectViewer : public GlApplication {
     public:
         void parseArgs(int argc, char **argv) override;
 
@@ -30,8 +33,8 @@ namespace panoramagrid::gl::applications {
         double lastCursorX = 0, lastCursorY = 0;
         double cursorSensitivity = 0.002, scrollSensitivity = 0.05;
         std::string inputFile = "";
-        std::shared_ptr<Node> node = std::make_shared<Node>(std::make_shared<CubeMesh>(),
-            std::make_shared<CubemapMaterial>());
+        std::shared_ptr<Node> node = std::make_shared<Node>(std::make_shared<SphereMesh>(36, 72),
+            std::make_shared<UvMaterial>());
 
         void loadTexture();
     };
@@ -39,4 +42,4 @@ namespace panoramagrid::gl::applications {
 }
 
 
-#endif //PANORAMAGRID_CUBEMAPVIEWERGLAPPLICATION_HPP
+#endif //PANORAMAGRID_EQUIRECTVIEWER_HPP

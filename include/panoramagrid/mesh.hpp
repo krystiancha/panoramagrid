@@ -10,6 +10,7 @@ namespace panoramagrid {
     public:
         enum DrawMethod {
             TRIANGLE_STRIP,
+            TRIANGLES,
         };
 
         Mesh();
