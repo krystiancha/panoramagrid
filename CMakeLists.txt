@@ -47,7 +47,7 @@ endforeach ()
 set(PANORAMAGRID_SRC ${PANORAMAGRID_SRC} include/panoramagrid/panoramagrid.hpp include/panoramagrid/gl/gl.hpp)  # all-in-one headers
 add_library(panoramagrid SHARED ${PANORAMAGRID_SRC})
 target_include_directories(panoramagrid PUBLIC ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(panoramagrid ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} glad glm zip)
+target_link_libraries(panoramagrid ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} glad glfw glm zip)
 
 # cubemapviewer
 add_executable(cubemapviewer tools/cubemapviewer.cpp)
