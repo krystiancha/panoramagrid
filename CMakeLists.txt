@@ -102,3 +102,7 @@ install (TARGETS cubemapstitch DESTINATION bin)
 add_executable(equirectviewer tools/equirectviewer.cpp)
 target_link_libraries(equirectviewer dl glad glfw panoramagrid)
 install (TARGETS equirectviewer DESTINATION bin)
+
+## Shared files
+file(GLOB Panoramagrid_SHARE share/panoramagrid/*)
+install(FILES ${Panoramagrid_SHARE} DESTINATION share/panoramagrid)
