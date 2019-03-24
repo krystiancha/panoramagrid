@@ -28,6 +28,7 @@ add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/src/glad.c
         COMMAND ${GLAD} --profile core --out-path ${PROJECT_SOURCE_DIR} --api gl= --generator c-debug --spec gl
         COMMENT "Generating sources for glad")
 add_library(glad src/glad.c include/glad/glad.h include/KHR/khrplatform.h)
+install (FILES include/glad/glad.h DESTINATION include/glad)
 
 
 # GLFW
