@@ -6,6 +6,5 @@
 #include <panoramagrid/mesh.hpp>
 #include <panoramagrid/node.hpp>
 #include <panoramagrid/renderer.hpp>
-
-#include <panoramagrid/gl/glrenderer.hpp>
-#include <panoramagrid/gl/shader.hpp>
+#include <panoramagrid/spheremesh.hpp>
+#include <panoramagrid/uvmaterial.hpp>
