@@ -21,7 +21,7 @@ namespace panoramagrid::gl::applications {
 
         const std::shared_ptr<Renderer> &getRenderer() const;
 
-        virtual void framebufferSizeCallback(int width, int height) {};
+        virtual void framebufferSizeCallback(int width, int height);
 
         virtual void keyCallback(int key, int scancode, int action, int mods) {};
 

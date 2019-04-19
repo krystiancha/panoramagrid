@@ -59,6 +59,12 @@ namespace panoramagrid::gl::applications {
         return renderer;
     }
 
+    void GlApplication::framebufferSizeCallback(int width, int height) {
+        glViewport(0, 0, width, height);
+        renderer->setHeight(height);
+        renderer->setWidth(width);
+    }
+
     void GlApplication::initCallbacks() {
         glfwSetFramebufferSizeCallback(window, [](GLFWwindow *window, int width, int height) {
             auto that = static_cast<GlApplication *>(glfwGetWindowUserPointer(window));
