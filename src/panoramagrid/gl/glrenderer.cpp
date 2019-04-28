@@ -14,9 +14,10 @@ namespace panoramagrid::gl {
         GLint mvpUniform = usedShader->getUniformLocation("mvp");
         glm::mat4 model = glm::translate(toGlm(node->getPosition()));
         auto rpy = getCamera()->getOrientation();
+        auto pos = getCamera()->getPosition();
         rpy[2] += M_PI_2f32; // looking along the z axis is 0 yaw
         glm::mat4 view = glm::lookAt(
-            glm::vec3(0),
+            glm::vec3(pos.at(0), pos.at(1), pos.at(2)),
             glm::normalize(glm::vec3(cosf(rpy[2]) * cosf(rpy[1]), sinf(rpy[1]), sinf(rpy[2]) * cosf(rpy[1]))),
             glm::vec3(0, 1, 0)
         );
