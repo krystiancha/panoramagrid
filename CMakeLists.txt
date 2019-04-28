@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Panoramagrid)
+project(Panoramagrid VERSION 0.0.1 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -9,6 +9,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 
 # Boost
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
 find_package(Boost COMPONENTS program_options REQUIRED)
 
 
@@ -28,7 +31,7 @@ add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/src/glad.c
         COMMAND ${GLAD} --profile core --out-path ${PROJECT_SOURCE_DIR} --api gl= --generator c-debug --spec gl
         COMMENT "Generating sources for glad")
 add_library(glad src/glad.c include/glad/glad.h include/KHR/khrplatform.h)
-install (FILES include/glad/glad.h DESTINATION include/glad)
+install(FILES include/glad/glad.h DESTINATION include/glad)
 
 
 # GLFW
@@ -53,7 +56,7 @@ foreach(CLASS camera cubemapmaterial cubemesh grid material mesh node renderer s
     set(Panoramagrid_SRC ${Panoramagrid_SRC} src/panoramagrid/${CLASS}.cpp)
 endforeach()
 set(Panoramagrid_INCLUDE ${Panoramagrid_INCLUDE} include/panoramagrid/panoramagrid.hpp)  # all-in-one header
-install (FILES ${Panoramagrid_INCLUDE} DESTINATION include/panoramagrid)
+install(FILES ${Panoramagrid_INCLUDE} DESTINATION include/panoramagrid)
 
 ### gl
 
@@ -62,7 +65,7 @@ foreach(CLASS glrenderer shader)
     set(Panoramagrid_gl_SRC ${Panoramagrid_gl_SRC} src/panoramagrid/gl/${CLASS}.cpp)
 endforeach()
 set(Panoramagrid_gl_INCLUDE ${Panoramagrid_gl_INCLUDE} include/panoramagrid/gl/gl.hpp)  # all-in-one header
-install (FILES ${Panoramagrid_gl_INCLUDE} DESTINATION include/panoramagrid/gl)
+install(FILES ${Panoramagrid_gl_INCLUDE} DESTINATION include/panoramagrid/gl)
 
 ### gl applications
 
@@ -70,7 +73,7 @@ foreach(CLASS cubemapviewer equirectviewer glapplication)
     set(Panoramagrid_gl_applications_INCLUDE ${Panoramagrid_gl_applications_INCLUDE} include/panoramagrid/gl/applications/${CLASS}.hpp)
     set(Panoramagrid_gl_applications_SRC ${Panoramagrid_gl_applications_SRC} src/panoramagrid/gl/applications/${CLASS}.cpp)
 endforeach()
-install (FILES ${Panoramagrid_gl_applications_INCLUDE} DESTINATION include/panoramagrid/gl/applications)
+install(FILES ${Panoramagrid_gl_applications_INCLUDE} DESTINATION include/panoramagrid/gl/applications)
 
 ### Build
 add_library(panoramagrid SHARED
@@ -82,25 +85,36 @@ add_library(panoramagrid SHARED
         ${Panoramagrid_gl_applications_INCLUDE}
 )
 target_include_directories(panoramagrid PUBLIC ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(panoramagrid ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} glad glfw glm zip)
-install(TARGETS panoramagrid DESTINATION lib)
+target_link_libraries(panoramagrid PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} glad glfw glm zip)
+install(TARGETS panoramagrid glad EXPORT panoramagrid-targets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
+install(EXPORT panoramagrid-targets FILE PanoramagridTargets.cmake DESTINATION lib/cmake/Panoramagrid)
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+        ${CMAKE_CURRENT_LIST_DIR}/cmake/PanoramagridConfig.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/PanoramagridConfig.cmake
+        INSTALL_DESTINATION lib/cmake/Panoramagrid
+)
+install(
+        FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/PanoramagridConfig.cmake
+        DESTINATION lib/cmake/Panoramagrid
+)
 
 ## Tools
 
 ### cubemapviewer
 add_executable(cubemapviewer tools/cubemapviewer.cpp)
-target_link_libraries(cubemapviewer dl glad glfw panoramagrid)
+target_link_libraries(cubemapviewer panoramagrid)
 install (TARGETS cubemapviewer DESTINATION bin)
 
 ### cubemapstitch
 add_executable(cubemapstitch tools/cubemapstitch.cpp)
-target_include_directories(cubemapstitch PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_libraries(cubemapstitch dl ${Boost_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(cubemapstitch panoramagrid)
 install (TARGETS cubemapstitch DESTINATION bin)
 
 ### equirectviewer
 add_executable(equirectviewer tools/equirectviewer.cpp)
-target_link_libraries(equirectviewer dl glad glfw panoramagrid)
+target_link_libraries(equirectviewer panoramagrid)
 install (TARGETS equirectviewer DESTINATION bin)
 
 ## Shared files
