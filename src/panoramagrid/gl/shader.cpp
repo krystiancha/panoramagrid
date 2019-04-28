@@ -29,6 +29,7 @@ namespace panoramagrid::gl {
         auto *cSource = new GLchar[source.size() + 1];
         strcpy(cSource, source.c_str());
         glShaderSource(shader, 1, &cSource, nullptr);
+        delete[] cSource;
 
         // Compile
         glCompileShader(shader);
