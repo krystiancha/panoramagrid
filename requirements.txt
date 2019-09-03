@@ -1,0 +1,7 @@
+numpy
+opencv-python
+aiohttp
+cchardet
+aiodns
+pycairo
+pyside2
