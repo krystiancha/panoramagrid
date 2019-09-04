@@ -11,15 +11,28 @@ namespace panoramagrid {
 
     class Grid {
     public:
-        void load(std::string path);
+        typedef std::array<float, 3> Point;
 
-        cv::Mat nearest(boost::qvm::vec<float, 3> point);
+        void open(const std::string &path);
+
+        void close();
+
+        void flush();
+
+        std::pair<Point, cv::Mat> get(Point point);
+
+        unsigned long set(Point point, const cv::Mat& mat);
+
+        std::vector<std::pair<Point, unsigned long>> list();
+
+        void remove(unsigned long index);
 
     private:
-        std::vector<boost::qvm::vec<float, 3>> points;
-        zip_t *archive;
+        std::string path;
+        zip_t *archive = nullptr;
 
-        static boost::qvm::vec<float, 3> filenameToPoint(std::string filename);
+        static Point filenameToPoint(std::string filename);
+        static std::string pointToFilename(Point point);
     };
 
 }

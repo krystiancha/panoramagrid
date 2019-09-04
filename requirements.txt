@@ -1,7 +1,6 @@
-numpy
+matplotlib
+pyqt5
 opencv-python
-aiohttp
-cchardet
-aiodns
-pycairo
-pyside2
+numpy
+alphashape
+descartes

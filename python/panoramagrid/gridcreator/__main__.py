@@ -13,12 +13,12 @@ from panoramagrid.gridcreator.table_model import TableModel
 
 
 class MainWidget(QtWidgets.QWidget):
-    def __init__(self, parent):
+    def __init__(self, parent, grid_path):
         super().__init__(parent)
 
         self.camera = Camera(self)
 
-        self.item_model = TableModel()
+        self.item_model = TableModel(grid_path)
 
         self.selection_model = QtCore.QItemSelectionModel(self.item_model)
         self.table = Table(self.item_model, self.selection_model, self.camera)
@@ -31,7 +31,11 @@ class MainWidget(QtWidgets.QWidget):
 
         self.bottom_layout = QtWidgets.QHBoxLayout()
         self.bottom_layout.addWidget(self.table, 3)
-        self.bottom_layout.addWidget(self.stats, 1)
+
+        self.bottom_right_layout = QtWidgets.QVBoxLayout()
+        self.bottom_right_layout.addWidget(self.stats)
+        self.bottom_right_layout.addWidget(self.camera)
+        self.bottom_layout.addLayout(self.bottom_right_layout, 1)
 
         self.layout.addWidget(self.plot, 1)
         self.layout.addLayout(self.bottom_layout, 1)
@@ -45,6 +49,7 @@ class ApiBaseAction(argparse.Action):
 
 
 parser = argparse.ArgumentParser(description='Build a grid of equirectangular images.')
+parser.add_argument('path', type=str)
 parser.add_argument('--api-base', '-b', type=str, default='http://192.168.1.1', action=ApiBaseAction)
 parser.add_argument('--timeout', '-t', type=float, default=None)
 args = parser.parse_args()
@@ -54,7 +59,7 @@ app = QtWidgets.QApplication(sys.argv)
 window = QtWidgets.QMainWindow()
 window.setWindowTitle("GridCreator")
 
-widget = MainWidget(window)
+widget = MainWidget(window, args.path)
 window.setCentralWidget(widget)
 window.addToolBar(NavigationToolbar(widget.plot.canvas, window))
 window.show()

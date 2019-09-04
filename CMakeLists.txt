@@ -12,7 +12,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost COMPONENTS program_options REQUIRED)
+find_package(PythonLibs 3 REQUIRED)
+find_package(Boost COMPONENTS program_options python3 numpy3 REQUIRED)
 
 
 # OpenCV
@@ -28,7 +29,7 @@ endif ()
 add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/src/glad.c
         ${PROJECT_SOURCE_DIR}/include/glad/glad.h
         ${PROJECT_SOURCE_DIR}/include/KHR/khrplatform.h
-        COMMAND ${GLAD} --profile core --out-path ${PROJECT_SOURCE_DIR} --api gl= --generator c-debug --spec gl
+        COMMAND ${GLAD} --profile core --out-path ${PROJECT_SOURCE_DIR} --api gl= --generator c --spec gl
         COMMENT "Generating sources for glad")
 add_library(glad src/glad.c include/glad/glad.h include/KHR/khrplatform.h)
 install(FILES include/glad/glad.h DESTINATION include/glad)
@@ -85,7 +86,7 @@ add_library(panoramagrid SHARED
         ${Panoramagrid_gl_applications_INCLUDE}
 )
 target_include_directories(panoramagrid PUBLIC ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(panoramagrid PUBLIC ${Boost_LIBRARIES} ${OpenCV_LIBRARIES} glad glfw glm zip)
+target_link_libraries(panoramagrid PUBLIC Boost::program_options ${OpenCV_LIBRARIES} glad glfw glm zip)
 install(TARGETS panoramagrid glad EXPORT panoramagrid-targets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
 install(EXPORT panoramagrid-targets FILE PanoramagridTargets.cmake DESTINATION lib/cmake/Panoramagrid)
 include(CMakePackageConfigHelpers)
@@ -99,6 +100,14 @@ install(
         ${CMAKE_CURRENT_BINARY_DIR}/PanoramagridConfig.cmake
         DESTINATION lib/cmake/Panoramagrid
 )
+
+## Gridpy
+
+add_library(gridpy SHARED include/panoramagrid/gridpy.hpp src/panoramagrid/gridpy.cpp)
+set_target_properties(gridpy PROPERTIES PREFIX "")
+target_include_directories(gridpy PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(gridpy panoramagrid Boost::python3 Boost::numpy3 ${PYTHON_LIBRARIES})
+install(TARGETS gridpy DESTINATION lib)
 
 ## Tools
 
@@ -116,6 +125,12 @@ install (TARGETS cubemapstitch DESTINATION bin)
 add_executable(equirectviewer tools/equirectviewer.cpp)
 target_link_libraries(equirectviewer panoramagrid)
 install (TARGETS equirectviewer DESTINATION bin)
+
+### gridexplorer
+add_executable(gridexplorer tools/gridexplorer.cpp)
+#target_include_directories(gridexplorer PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(gridexplorer panoramagrid)
+install (TARGETS gridexplorer DESTINATION lib)
 
 ## Shared files
 file(GLOB Panoramagrid_SHARE share/panoramagrid/*)

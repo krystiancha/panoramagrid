@@ -1,20 +1,25 @@
 from enum import Enum, unique
 
+import numpy as np
+from gridpy import Grid
 from matplotlib.backends.qt_compat import QtCore
 
 
 class TableModel(QtCore.QAbstractItemModel):
     @unique
     class Columns(Enum):
-        ID = 0
-        X = 1
-        Y = 2
-        IMAGE = 3
+        X = 0
+        Y = 1
+        IMAGE = 2
 
-    def __init__(self):
+    def __init__(self, grid_path):
         super().__init__()
-        self.points = []
-        self.id_counter = 0
+        self._points = []
+        self._images = []
+        self.grid = Grid()
+        self.grid.open(grid_path)
+        for point, image_size in self.grid.list():
+            self.append_point(point, image_size)
 
     def index(self, row, column, parent=QtCore.QModelIndex()):
         return self.createIndex(row, column)
@@ -23,7 +28,7 @@ class TableModel(QtCore.QAbstractItemModel):
         return QtCore.QModelIndex()
 
     def rowCount(self, parent=QtCore.QModelIndex()):
-        return len(self.points)
+        return len(self._points)
 
     def columnCount(self, parent=QtCore.QModelIndex()):
         # noinspection PyTypeChecker
@@ -31,7 +36,13 @@ class TableModel(QtCore.QAbstractItemModel):
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         if role == QtCore.Qt.DisplayRole:
-            return self.points[index.row()][index.column()]
+            column = self.Columns(index.column())
+            if column == self.Columns.X:
+                return self._points[index.row()][0]
+            if column == self.Columns.Y:
+                return self._points[index.row()][1]
+            if column == self.Columns.IMAGE:
+                return bool(self._images[index.row()])
         return None
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
@@ -41,58 +52,78 @@ class TableModel(QtCore.QAbstractItemModel):
 
         if role == QtCore.Qt.EditRole:
             column = self.Columns(index.column())
-            if column in (self.Columns.X, self.Columns.Y):
+            if column in [self.Columns.X, self.Columns.Y]:
+                element = [self.Columns.X, self.Columns.Y].index(column)
+                if self.is_point_complete(self._points[index.row()]):
+                    return False
                 if value is None:
-                    self.points[index.row()][index.column()] = None
+                    self._points[index.row()][element] = None
                     return success()
                 try:
-                    self.points[index.row()][index.column()] = float(value)
+                    self._points[index.row()][element] = float(value)
                 except ValueError:
                     return False
-                return success()
-            if column in (self.Columns.ID, self.Columns.IMAGE):
-                self.points[index.row()][index.column()] = value
+                if self.is_point_complete(self._points[index.row()]):
+                    self.grid.set(tuple(self._points[index.row()]), np.empty([]))
+                    self.grid.flush()
                 return success()
 
     def flags(self, index=QtCore.QModelIndex()):
         column = self.Columns(index.column())
-        if column in (self.Columns.X, self.Columns.Y):
+        if column in [self.Columns.X, self.Columns.Y]:
+            if self.is_point_complete(self._points[index.row()]):
+                return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
             return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
-        elif column in (self.Columns.ID, self.Columns.IMAGE):
+        if column == self.Columns.IMAGE:
             return QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled
 
     def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
-                return ("id", "x", "y", "image")[section]
-            else:
+                return self.Columns(section).name.lower().replace('_', " ")
+            if orientation == QtCore.Qt.Vertical:
                 return section + 1
 
-    def insertRows(self, row, count, parent=QtCore.QModelIndex()):
-        if row != self.rowCount():
-            raise NotImplemented()
+    def get_data(self):
+        return [(point, image) for point, image in zip(self._points, self._images) if None not in point]
 
-        self.beginInsertRows(parent, row, row + count - 1)
-        self.points += [[None, None, None, None] for _ in range(count)]
+    def append_point(self, point=(None, None, 0.0), image=None):
+        self.beginInsertRows(QtCore.QModelIndex(), len(self._points), len(self._points))
+        self._points.append(list(point))
+        self._images.append(bool(image))
         self.endInsertRows()
+        if self.is_point_complete(point) and image is None:
+            self.grid.set(tuple(point), np.array([]))
+            self.grid.flush()
 
-    def removeRows(self, row, count, parent=QtCore.QModelIndex()):
-        self.beginRemoveRows(parent, row, row + count - 1)
-        for _ in range(count):
-            self.points.pop(row)
+    def update_image(self, index, image):
+        if index >= len(self._points):
+            raise Exception()
+        if not isinstance(image, np.ndarray):
+            raise Exception()
+        if image.size == 0:
+            raise Exception()
+        self._images[index] = True
+        self.grid.set(tuple(self._points[index]), image)
+        self.grid.flush()
+        self.dataChanged.emit(
+            self.createIndex(index, self.Columns.IMAGE.value),
+            self.createIndex(index, self.Columns.IMAGE.value),
+            [],
+        )
+
+    def remove_point(self, index):
+        if self.is_point_complete(index=index):
+            self.grid.remove(index)
+            self.grid.flush()
+        self.beginRemoveRows(QtCore.QModelIndex(), index, index)
+        self._points.pop(index)
+        self._images.pop(index)
         self.endRemoveRows()
 
-    def add_point(self, point):
-        x, y = point
-        row = self.rowCount()
-        self.insertRows(row, 1)
-        self.setData(self.createIndex(row, self.Columns.ID._value_), self.id_counter)
-        self.setData(self.createIndex(row, self.Columns.X._value_), x)
-        self.setData(self.createIndex(row, self.Columns.Y._value_), y)
-        self.id_counter += 1
-
-    def get_point(self, index):
-        return [
-            self.data(self.createIndex(index, self.Columns.X)),
-            self.data(self.createIndex(index, self.Columns.Y)),
-        ]
+    def is_point_complete(self, point=None, index=None):
+        if point is not None and index is not None:
+            raise Exception()
+        if index is not None:
+            point = self._points[index]
+        return None not in point

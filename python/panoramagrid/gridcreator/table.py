@@ -1,3 +1,4 @@
+import numpy as np
 from matplotlib.backends.qt_compat import QtCore, QtWidgets
 
 
@@ -9,7 +10,7 @@ class Table(QtWidgets.QWidget):
         self.selection_model = selection_model
 
         self.camera = camera
-        self.picture_pending_row = None
+        self.picture_pending_idx = None
         self.camera.thread.picture_taken.connect(self.update_picture)
 
         self.table_view = QtWidgets.QTableView()
@@ -22,13 +23,14 @@ class Table(QtWidgets.QWidget):
         self.add_button.clicked.connect(self.append_point)
 
         self.picture_button = QtWidgets.QPushButton("Take picture")
+        self.picture_button.setEnabled(False)
         self.picture_button.clicked.connect(self.take_picture)
 
         self.delete_button = QtWidgets.QPushButton("Delete row")
         self.delete_button.setEnabled(False)
         self.delete_button.clicked.connect(self.remove_point)
 
-        self.deselect_button = QtWidgets.QPushButton("Clear current")
+        self.deselect_button = QtWidgets.QPushButton("Deselect")
         self.deselect_button.clicked.connect(self.deselect_current)
 
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -45,32 +47,30 @@ class Table(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def append_point(self):
-        self.item_model.add_point((None, None))
+        self.item_model.append_point()
 
     @QtCore.Slot()
     def remove_point(self):
         current_index = self.selection_model.currentIndex()
-
         if current_index.isValid():
-            self.table_view.model().removeRows(current_index.row(), 1)
+            self.item_model.remove_point(current_index.row())
 
-    @QtCore.Slot(QtCore.QModelIndex)
-    def update_selected(self, current):
-        self.delete_button.setEnabled(current.isValid() and len(self.item_model.points))
-        self.picture_button.setEnabled(current.isValid() and len(self.item_model.points))
+    @QtCore.Slot(QtCore.QModelIndex, QtCore.QModelIndex)
+    def update_selected(self, current, previous):
+        self.delete_button.setEnabled(current.isValid())
+        self.picture_button.setEnabled(current.isValid() and self.item_model.is_point_complete(index=current.row()))
 
     @QtCore.Slot()
     def take_picture(self):
         current_index = self.selection_model.currentIndex()
         if current_index.isValid():
-            point = self.item_model.get_point(current_index.row())
-            self.picture_pending_row = current_index.row()
-            self.camera.take_picture(f'img/{point[0]}_{point[1]}_1.0.jpg')
+            self.picture_pending_idx = current_index.row()
+            self.camera.take_picture()
 
-    @QtCore.Slot(str)
-    def update_picture(self, name):
-        self.item_model.setData(self.item_model.createIndex(self.picture_pending_row, 3), name)
-        self.picture_pending_row = None
+    @QtCore.Slot(np.ndarray)
+    def update_picture(self, img):
+        self.item_model.update_image(self.picture_pending_idx, img)
+        self.picture_pending_idx = None
 
     @QtCore.Slot()
     def deselect_current(self):
