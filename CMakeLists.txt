@@ -1,137 +1,213 @@
-cmake_minimum_required(VERSION 3.10)
-project(Panoramagrid VERSION 0.0.1 LANGUAGES CXX C)
+cmake_minimum_required(VERSION 2.8.3)
+project(panoramagrid)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+## Compile as C++11, supported in ROS Kinetic and newer
+add_compile_options(-std=c++11)
 
-
-# Boost
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_USE_MULTITHREADED ON)
-set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(PythonLibs 3 REQUIRED)
-find_package(Boost COMPONENTS program_options python3 numpy3 REQUIRED)
-
-
-# OpenCV
-find_package(OpenCV REQUIRED core imgproc imgcodecs highgui)
-
-
-# GLAD
-find_program(GLAD glad)
-if (NOT GLAD)
-    message(FATAL_ERROR "glad not found in your PATH. Go to https://github.com/Dav1dde/glad for details. "
-            "You can install it via pip: pip install glad")
-endif ()
-add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/src/glad.c
-        ${PROJECT_SOURCE_DIR}/include/glad/glad.h
-        ${PROJECT_SOURCE_DIR}/include/KHR/khrplatform.h
-        COMMAND ${GLAD} --profile core --out-path ${PROJECT_SOURCE_DIR} --api gl= --generator c --spec gl
-        COMMENT "Generating sources for glad")
-add_library(glad src/glad.c include/glad/glad.h include/KHR/khrplatform.h)
-install(FILES include/glad/glad.h DESTINATION include/glad)
-
-
-# GLFW
-find_package(glfw3 3.2 REQUIRED)
-
-
-# GLM
-find_package(glm REQUIRED)
-
-
-include_directories(include)
-
-
-# Panoramagrid
-
-## Library
-
-### base
-
-foreach(CLASS camera cubemapmaterial cubemesh grid material mesh node renderer spheremesh uvmaterial)
-    set(Panoramagrid_INCLUDE ${Panoramagrid_INCLUDE} include/panoramagrid/${CLASS}.hpp)
-    set(Panoramagrid_SRC ${Panoramagrid_SRC} src/panoramagrid/${CLASS}.cpp)
-endforeach()
-set(Panoramagrid_INCLUDE ${Panoramagrid_INCLUDE} include/panoramagrid/panoramagrid.hpp)  # all-in-one header
-install(FILES ${Panoramagrid_INCLUDE} DESTINATION include/panoramagrid)
-
-### gl
-
-foreach(CLASS glrenderer shader)
-    set(Panoramagrid_gl_INCLUDE ${Panoramagrid_gl_INCLUDE} include/panoramagrid/gl/${CLASS}.hpp)
-    set(Panoramagrid_gl_SRC ${Panoramagrid_gl_SRC} src/panoramagrid/gl/${CLASS}.cpp)
-endforeach()
-set(Panoramagrid_gl_INCLUDE ${Panoramagrid_gl_INCLUDE} include/panoramagrid/gl/gl.hpp)  # all-in-one header
-install(FILES ${Panoramagrid_gl_INCLUDE} DESTINATION include/panoramagrid/gl)
-
-### gl applications
-
-foreach(CLASS cubemapviewer equirectviewer glapplication)
-    set(Panoramagrid_gl_applications_INCLUDE ${Panoramagrid_gl_applications_INCLUDE} include/panoramagrid/gl/applications/${CLASS}.hpp)
-    set(Panoramagrid_gl_applications_SRC ${Panoramagrid_gl_applications_SRC} src/panoramagrid/gl/applications/${CLASS}.cpp)
-endforeach()
-install(FILES ${Panoramagrid_gl_applications_INCLUDE} DESTINATION include/panoramagrid/gl/applications)
-
-### Build
-add_library(panoramagrid SHARED
-        ${Panoramagrid_SRC}
-        ${Panoramagrid_gl_SRC}
-        ${Panoramagrid_gl_applications_SRC}
-        ${Panoramagrid_INCLUDE}
-        ${Panoramagrid_gl_INCLUDE}
-        ${Panoramagrid_gl_applications_INCLUDE}
-)
-target_include_directories(panoramagrid PUBLIC ${Boost_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
-target_link_libraries(panoramagrid PUBLIC Boost::program_options ${OpenCV_LIBRARIES} glad glfw glm zip)
-install(TARGETS panoramagrid glad EXPORT panoramagrid-targets LIBRARY DESTINATION lib ARCHIVE DESTINATION lib)
-install(EXPORT panoramagrid-targets FILE PanoramagridTargets.cmake DESTINATION lib/cmake/Panoramagrid)
-include(CMakePackageConfigHelpers)
-configure_package_config_file(
-        ${CMAKE_CURRENT_LIST_DIR}/cmake/PanoramagridConfig.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/PanoramagridConfig.cmake
-        INSTALL_DESTINATION lib/cmake/Panoramagrid
-)
-install(
-        FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/PanoramagridConfig.cmake
-        DESTINATION lib/cmake/Panoramagrid
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
+  image_transport
+  orocos_kdl
+  roscpp
+  rospy
+  std_msgs
+  tf
 )
 
-## Gridpy
+## System dependencies are found with CMake's conventions
+# find_package(Boost REQUIRED COMPONENTS system)
 
-add_library(gridpy SHARED include/panoramagrid/gridpy.hpp src/panoramagrid/gridpy.cpp)
-set_target_properties(gridpy PROPERTIES PREFIX "")
-target_include_directories(gridpy PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(gridpy panoramagrid Boost::python3 Boost::numpy3 ${PYTHON_LIBRARIES})
-install(TARGETS gridpy DESTINATION lib)
 
-## Tools
+## Uncomment this if the package has a setup.py. This macro ensures
+## modules and global scripts declared therein get installed
+## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
+# catkin_python_setup()
 
-### cubemapviewer
-add_executable(cubemapviewer tools/cubemapviewer.cpp)
-target_link_libraries(cubemapviewer panoramagrid)
-install (TARGETS cubemapviewer DESTINATION bin)
+################################################
+## Declare ROS messages, services and actions ##
+################################################
 
-### cubemapstitch
-add_executable(cubemapstitch tools/cubemapstitch.cpp)
-target_link_libraries(cubemapstitch panoramagrid)
-install (TARGETS cubemapstitch DESTINATION bin)
+## To declare and build messages, services or actions from within this
+## package, follow these steps:
+## * Let MSG_DEP_SET be the set of packages whose message types you use in
+##   your messages/services/actions (e.g. std_msgs, actionlib_msgs, ...).
+## * In the file package.xml:
+##   * add a build_depend tag for "message_generation"
+##   * add a build_depend and a exec_depend tag for each package in MSG_DEP_SET
+##   * If MSG_DEP_SET isn't empty the following dependency has been pulled in
+##     but can be declared for certainty nonetheless:
+##     * add a exec_depend tag for "message_runtime"
+## * In this file (CMakeLists.txt):
+##   * add "message_generation" and every package in MSG_DEP_SET to
+##     find_package(catkin REQUIRED COMPONENTS ...)
+##   * add "message_runtime" and every package in MSG_DEP_SET to
+##     catkin_package(CATKIN_DEPENDS ...)
+##   * uncomment the add_*_files sections below as needed
+##     and list every .msg/.srv/.action file to be processed
+##   * uncomment the generate_messages entry below
+##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
-### equirectviewer
-add_executable(equirectviewer tools/equirectviewer.cpp)
-target_link_libraries(equirectviewer panoramagrid)
-install (TARGETS equirectviewer DESTINATION bin)
+## Generate messages in the 'msg' folder
+# add_message_files(
+#   FILES
+#   Message1.msg
+#   Message2.msg
+# )
 
-### gridexplorer
-add_executable(gridexplorer tools/gridexplorer.cpp)
-#target_include_directories(gridexplorer PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(gridexplorer panoramagrid)
-install (TARGETS gridexplorer DESTINATION lib)
+## Generate services in the 'srv' folder
+# add_service_files(
+#   FILES
+#   Service1.srv
+#   Service2.srv
+# )
 
-## Shared files
-file(GLOB Panoramagrid_SHARE share/panoramagrid/*)
-install(FILES ${Panoramagrid_SHARE} DESTINATION share/panoramagrid)
+## Generate actions in the 'action' folder
+# add_action_files(
+#   FILES
+#   Action1.action
+#   Action2.action
+# )
+
+## Generate added messages and services with any dependencies listed here
+# generate_messages(
+#   DEPENDENCIES
+#   std_msgs
+# )
+
+################################################
+## Declare ROS dynamic reconfigure parameters ##
+################################################
+
+## To declare and build dynamic reconfigure parameters within this
+## package, follow these steps:
+## * In the file package.xml:
+##   * add a build_depend and a exec_depend tag for "dynamic_reconfigure"
+## * In this file (CMakeLists.txt):
+##   * add "dynamic_reconfigure" to
+##     find_package(catkin REQUIRED COMPONENTS ...)
+##   * uncomment the "generate_dynamic_reconfigure_options" section below
+##     and list every .cfg file to be processed
+
+## Generate dynamic reconfigure parameters in the 'cfg' folder
+# generate_dynamic_reconfigure_options(
+#   cfg/DynReconf1.cfg
+#   cfg/DynReconf2.cfg
+# )
+
+###################################
+## catkin specific configuration ##
+###################################
+## The catkin_package macro generates cmake config files for your package
+## Declare things to be passed to dependent projects
+## INCLUDE_DIRS: uncomment this if your package contains header files
+## LIBRARIES: libraries you create in this project that dependent projects also need
+## CATKIN_DEPENDS: catkin_packages dependent projects also need
+## DEPENDS: system dependencies of this project that dependent projects also need
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES panoramagrid
+#  CATKIN_DEPENDS cv_bridge image_transport orocos_kdl roscpp rospy std_msgs tf
+#  DEPENDS system_lib
+)
+
+###########
+## Build ##
+###########
+
+## Specify additional locations of header files
+## Your package locations should be listed before other locations
+include_directories(
+#  include
+  /usr/local/include
+  ${catkin_INCLUDE_DIRS}
+)
+
+## Declare a C++ library
+# add_library(${PROJECT_NAME}
+#   src/${PROJECT_NAME}/panoramagrid.cpp
+# )
+
+## Add cmake target dependencies of the library
+## as an example, code may need to be generated before libraries
+## either from message generation or dynamic reconfigure
+# add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Declare a C++ executable
+## With catkin_make all packages are built within a single CMake context
+## The recommended prefix ensures that target names across packages don't collide
+add_executable(${PROJECT_NAME}_node src/panoramagrid_node.cpp)
+
+## Rename C++ executable without prefix
+## The above recommended prefix causes long target names, the following renames the
+## target back to the shorter version for ease of user use
+## e.g. "rosrun someones_pkg node" instead of "rosrun someones_pkg someones_pkg_node"
+set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
+
+## Add cmake target dependencies of the executable
+## same as for the library above
+add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(${PROJECT_NAME}_node
+  ${catkin_LIBRARIES}
+  panoramagrid
+  glfw
+)
+
+#############
+## Install ##
+#############
+
+# all install targets should use catkin DESTINATION variables
+# See http://ros.org/doc/api/catkin/html/adv_user_guide/variables.html
+
+## Mark executable scripts (Python etc.) for installation
+## in contrast to setup.py, you can choose the destination
+# install(PROGRAMS
+#   scripts/my_python_script
+#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
+
+## Mark executables for installation
+## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_executables.html
+install(TARGETS ${PROJECT_NAME}_node
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+## Mark libraries for installation
+## See http://docs.ros.org/melodic/api/catkin/html/howto/format1/building_libraries.html
+# install(TARGETS ${PROJECT_NAME}
+#   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#   RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+# )
+
+## Mark cpp header files for installation
+#install(DIRECTORY include/${PROJECT_NAME}/
+#  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+#  FILES_MATCHING PATTERN "*.h"
+#  PATTERN ".svn" EXCLUDE
+#)
+
+## Mark other files for installation (e.g. launch and bag files, etc.)
+# install(FILES
+#   # myfile1
+#   # myfile2
+#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+# )
+
+#############
+## Testing ##
+#############
+
+## Add gtest based cpp test target and link libraries
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_panoramagrid.cpp)
+# if(TARGET ${PROJECT_NAME}-test)
+#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
+# endif()
+
+## Add folders to be run by python nosetests
+# catkin_add_nosetests(test)

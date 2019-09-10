@@ -1,6 +1,0 @@
-matplotlib
-pyqt5
-opencv-python
-numpy
-alphashape
-descartes
