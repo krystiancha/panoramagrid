@@ -29,6 +29,6 @@
         output="screen"
         if="$(arg run_node)"
     >
-        <param name="path" value="/grid.zip" />
+        <param name="path" value="/usr/local/share/panoramagrid/grid.zip" />
     </node>
 </launch>
