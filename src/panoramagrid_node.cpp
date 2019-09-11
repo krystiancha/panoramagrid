@@ -86,12 +86,15 @@ public:
         getRenderer()->loadTexture(node->getMaterial());
     }
     void setOrientation(KDL::Rotation orientation) {
-        double r, p, y;
-        orientation.GetRPY(r, p, y);
-        renderer->getCamera()->setOrientation({
-            static_cast<float>(r), 
-            static_cast<float>(p),
-            static_cast<float>(y),
+       double roll, pitch, yaw;
+       double x, y, z, w;
+       orientation.GetQuaternion(x, y, z, w);
+       // Quaternion transformation ROS->OpenGL
+       renderer->getCamera()->setOrientation({
+            static_cast<float>(-y),
+            static_cast<float>(z),
+            static_cast<float>(x),
+            static_cast<float>(w),
         });
     }
     cv::Mat render() {
