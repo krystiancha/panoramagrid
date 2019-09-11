@@ -1,5 +1,6 @@
 #include <panoramagrid/gl/applications/equirectviewer.hpp>
 #include <boost/algorithm/clamp.hpp>
+#include <glm/ext.hpp>
 
 void panoramagrid::gl::applications::EquirectViewer::framebufferSizeCallback(int width, int height) {
     GlApplication::framebufferSizeCallback(width, height);
@@ -30,17 +31,23 @@ void panoramagrid::gl::applications::EquirectViewer::cursorPosCallback(double xp
         return;
     }
 
-    auto rpy = renderer->getCamera()->getOrientation();
+    if (rightHeld) {
+        r = static_cast<float>(r - (xpos - lastCursorX) * cursorSensitivity);
+    } else {
+        p = boost::algorithm::clamp<float>(
+            static_cast<float>(p - (ypos - lastCursorY) * cursorSensitivity),
+            -M_PI_2f32,
+            M_PI_2f32
+        );
+        y = static_cast<float>(y + (xpos - lastCursorX) * cursorSensitivity);
+    }
 
-    renderer->getCamera()->setOrientation({
-        0,
-        boost::algorithm::clamp<float>(
-            static_cast<float>(rpy[1] - (ypos - lastCursorY) * cursorSensitivity),
-            -M_PI_2f32 + std::numeric_limits<float>::epsilon(),
-            M_PI_2f32 - std::numeric_limits<float>::epsilon()
-        ),
-        static_cast<float>(rpy[2] - (xpos - lastCursorX) * cursorSensitivity)
-    });
+    glm::mat4 matp(1), maty(1), matr(1);
+    matp = glm::rotate(matp, p, glm::vec3(1, 0, 0));
+    maty = glm::rotate(maty, y, glm::vec3(0, -1, 0));
+    matr = glm::rotate(matr, r, glm::vec3(0, 0, -1));
+    glm::quat quat = glm::quat_cast(matr * matp * maty);
+    renderer->getCamera()->setOrientation({quat[0], quat[1], quat[2], quat[3]});
 
     lastCursorX = xpos;
     lastCursorY = ypos;
@@ -53,6 +60,8 @@ void panoramagrid::gl::applications::EquirectViewer::mouseButtonCallback(int but
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
         glfwGetCursorPos(window, &lastCursorX, &lastCursorY);
+    } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+        rightHeld = action == GLFW_PRESS;
     }
 }
 

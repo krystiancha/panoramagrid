@@ -15,7 +15,7 @@ namespace panoramagrid {
             float aspectRatio = 4.0f / 3.0f,
             float fov = M_PI_2f32,
             const std::array<float, 3> &position = {0, 0, 0},
-            const std::array<float, 3> &orientation = {0, 0, 0}
+            const std::array<float, 4> &orientation = {0, 0, 0, 0}
         );
 
         float getAspectRatio() const;
@@ -30,15 +30,15 @@ namespace panoramagrid {
 
         void setPosition(const std::array<float, 3> &position);
 
-        const std::array<float, 3> &getOrientation() const;
+        const std::array<float, 4> &getOrientation() const;
 
-        void setOrientation(const std::array<float, 3> &orientation);
+        void setOrientation(const std::array<float, 4> &orientation);
 
     private:
         float aspectRatio;
         float fov;
         std::array<float, 3> position;
-        std::array<float, 3> orientation;
+        std::array<float, 4> orientation;
     };
 
 }

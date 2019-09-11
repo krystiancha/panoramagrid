@@ -32,6 +32,8 @@ namespace panoramagrid::gl::applications {
     protected:
         double lastCursorX = 0, lastCursorY = 0;
         double cursorSensitivity = 0.002, scrollSensitivity = 0.05;
+        bool rightHeld = false;
+        float r = 0, p = 0, y = 0;
         std::string inputFile = "";
         std::shared_ptr<Node> node = std::make_shared<Node>(std::make_shared<SphereMesh>(18, 36),
             std::make_shared<UvMaterial>());

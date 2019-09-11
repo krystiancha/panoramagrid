@@ -3,7 +3,7 @@
 namespace panoramagrid {
 
     Camera::Camera(float aspectRatio, float fov, const std::array<float, 3> &position,
-        const std::array<float, 3> &orientation)
+        const std::array<float, 4> &orientation)
         : position(position), orientation(orientation), fov(fov), aspectRatio(aspectRatio) {}
 
     const std::array<float, 3> &Camera::getPosition() const {
@@ -14,11 +14,11 @@ namespace panoramagrid {
         Camera::position = position;
     }
 
-    const std::array<float, 3> &Camera::getOrientation() const {
+    const std::array<float, 4> &Camera::getOrientation() const {
         return orientation;
     }
 
-    void Camera::setOrientation(const std::array<float, 3> &orientation) {
+    void Camera::setOrientation(const std::array<float, 4> &orientation) {
         Camera::orientation = orientation;
     }
 

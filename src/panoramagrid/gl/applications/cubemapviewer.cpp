@@ -36,7 +36,7 @@ void panoramagrid::gl::applications::CubemapViewer::cursorPosCallback(double xpo
     renderer->getCamera()->setOrientation({
         0,
         boost::algorithm::clamp<float>(
-            static_cast<float>(rpy[1] - (ypos - lastCursorY) * cursorSensitivity),
+            static_cast<float>(rpy[1] + (ypos - lastCursorY) * cursorSensitivity),
             -M_PI_2f32 + std::numeric_limits<float>::epsilon(),
             M_PI_2f32 - std::numeric_limits<float>::epsilon()
         ),
