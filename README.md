@@ -1,5 +1,12 @@
 # Panoramagrid
 
+# Requirements
+
+- OpenCV
+- GLFW
+- GLAD
+- dl
+
 ## Docker
 
 ### Run the container

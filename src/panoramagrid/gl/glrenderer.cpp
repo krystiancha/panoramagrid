@@ -15,7 +15,7 @@ namespace panoramagrid::gl {
         glm::mat4 model = glm::translate(toGlm(node->getPosition()));
         auto quat = getCamera()->getOrientation();
         auto pos = getCamera()->getPosition();
-        glm::mat4 view = glm::toMat4(glm::quat(quat[3], quat[0], quat[1], quat[2]));
+        glm::mat4 view = glm::toMat4(glm::quat(quat[3], quat[0], quat[1], quat[2])) * glm::translate(glm::vec3(pos[0], pos[1], pos[2]));
         glm::mat4 projection = glm::perspective(getCamera()->getFov(), getCamera()->getAspectRatio(), 0.1f, 100.0f);
         glUniformMatrix4fv(mvpUniform, 1, GL_FALSE, glm::value_ptr(projection * view * model));
 

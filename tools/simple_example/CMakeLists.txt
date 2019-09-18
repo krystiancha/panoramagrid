@@ -1,0 +1,3 @@
+add_executable(simple_example simple_example.cpp)
+target_compile_features(simple_example PRIVATE cxx_auto_type)
+target_link_libraries(simple_example Panoramagrid::Panoramagrid)

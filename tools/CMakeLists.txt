@@ -1,0 +1,5 @@
+add_subdirectory(cubemapstitch)
+add_subdirectory(cubemapviewer)
+add_subdirectory(equirectviewer)
+add_subdirectory(gridexplorer)
+add_subdirectory(simple_example)
