@@ -7,11 +7,14 @@
 #include <panoramagrid/grid.hpp>
 #include <panoramagrid/gl/glrenderer.hpp>
 #include <panoramagrid/gl/glapplication.hpp>
+#include <panoramagrid/node.hpp>
+#include <panoramagrid/spheremesh.hpp>
+#include <panoramagrid/uvmaterial.hpp>
 
 
 namespace pg = panoramagrid;
 
-class PanoramagridRosBridge : public pg::gl::GlApplication {
+class PanoramagridRosBridge : public pg::gl::applications::GlApplication {
 public:
     PanoramagridRosBridge(ros::NodeHandle nh) {
         nh.param<int>("width", width, 1280);
@@ -29,13 +32,14 @@ public:
         grid.open(path);
         
         ROS_DEBUG("Initializing GLFW");
-        pg::gl::GlApplication::initGlfw();
+        pg::gl::applications::GlApplication::initGlfw();
 
         ROS_DEBUG("Creating a OpenGL context");
         initContext();
     }
-    void parseArgs(int argc, char **argv) override {};
-    void initContext() override {
+    void parseArgs(int argc, char **argv) {};
+    void run() {};
+    void initContext() {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -108,6 +112,8 @@ private:
     int width, height;
     std::string path;
     pg::Grid grid;
+    std::shared_ptr<pg::Node> node = std::make_shared<pg::Node>(std::make_shared<pg::SphereMesh>(18, 36),
+        std::make_shared<pg::UvMaterial>());
     std::pair<KDL::Frame, cv::Mat> cache;
 };
 
