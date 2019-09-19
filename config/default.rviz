@@ -86,7 +86,7 @@ Visualization Manager:
       Value: true
     - Class: rviz/Marker
       Enabled: true
-      Marker Topic: /cubemap_marker
+      Marker Topic: /panoramagrid_node/cubemap_marker
       Name: Marker
       Namespaces:
         "": true
