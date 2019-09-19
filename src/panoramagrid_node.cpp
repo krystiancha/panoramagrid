@@ -6,12 +6,12 @@
 
 #include <panoramagrid/grid.hpp>
 #include <panoramagrid/gl/glrenderer.hpp>
-#include <panoramagrid/gl/applications/equirectviewer.hpp>
+#include <panoramagrid/gl/glapplication.hpp>
 
 
 namespace pg = panoramagrid;
 
-class PanoramagridRosBridge : public pg::gl::applications::EquirectViewer {
+class PanoramagridRosBridge : public pg::gl::GlApplication {
 public:
     PanoramagridRosBridge(ros::NodeHandle nh) {
         nh.param<int>("width", width, 1280);
@@ -29,7 +29,7 @@ public:
         grid.open(path);
         
         ROS_DEBUG("Initializing GLFW");
-        pg::gl::applications::EquirectViewer::initGlfw();
+        pg::gl::GlApplication::initGlfw();
 
         ROS_DEBUG("Creating a OpenGL context");
         initContext();
