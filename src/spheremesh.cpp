@@ -1,5 +1,5 @@
 #include <panoramagrid/spheremesh.hpp>
-#include <math.h>
+#include <cmath>
 
 namespace panoramagrid {
 

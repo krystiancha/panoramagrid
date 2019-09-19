@@ -1,8 +1,8 @@
 #include <iostream>
-
-#include <panoramagrid/panoramagrid.hpp>
-#include <panoramagrid/gl/gl.hpp>
-
+#include <opencv2/opencv.hpp>
+#include <panoramagrid/gl/glrenderer.hpp>
+#include <panoramagrid/spheremesh.hpp>
+#include <panoramagrid/uvmaterial.hpp>
 #include <GLFW/glfw3.h>
 
 namespace pg = panoramagrid;

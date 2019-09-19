@@ -2,7 +2,6 @@
 #define PANORAMAGRID_GRID_HPP
 
 
-#include <boost/qvm/vec.hpp>
 #include <opencv2/opencv.hpp>
 #include <array>
 #include <zip.h>
@@ -21,7 +20,7 @@ namespace panoramagrid {
 
         std::pair<Point, cv::Mat> get(Point point);
 
-        unsigned long set(Point point, const cv::Mat& mat);
+        unsigned long set(Point point, const cv::Mat &mat);
 
         std::vector<std::pair<Point, unsigned long>> list();
 
@@ -32,6 +31,7 @@ namespace panoramagrid {
         zip_t *archive = nullptr;
 
         static Point filenameToPoint(std::string filename);
+
         static std::string pointToFilename(Point point);
     };
 

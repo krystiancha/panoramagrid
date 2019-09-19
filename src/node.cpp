@@ -3,9 +3,9 @@
 namespace panoramagrid {
 
     Node::Node(const std::shared_ptr<Mesh> &mesh, const std::shared_ptr<Material> &material,
-        const std::array<float, 3> &position, const std::array<float, 3> &orientation,
-        const std::array<float, 3> &scale) : mesh(mesh), material(material), position(position),
-        orientation(orientation), scale(scale) {}
+               const std::array<float, 3> &position, const std::array<float, 3> &orientation,
+               const std::array<float, 3> &scale) : mesh(mesh), material(material), position(position),
+                                                    orientation(orientation), scale(scale) {}
 
     const std::shared_ptr<Mesh> &Node::getMesh() const {
         return mesh;

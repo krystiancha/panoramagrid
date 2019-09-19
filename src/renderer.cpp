@@ -3,7 +3,7 @@
 namespace panoramagrid {
 
     Renderer::Renderer(int width, int height)
-        : width(width), height(height), camera(std::make_shared<Camera>(1.0f * width / height)) {}
+            : width(width), height(height), camera(std::make_shared<Camera>(1.0f * width / height)) {}
 
     const std::shared_ptr<Camera> &Renderer::getCamera() const {
         return camera;

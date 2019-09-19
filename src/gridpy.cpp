@@ -1,10 +1,10 @@
 #include <panoramagrid/gridpy.hpp>
 
-Grid::Point tupleToPoint(const p::tuple& point) {
+Grid::Point tupleToPoint(const p::tuple &point) {
     return Grid::Point{
-        p::extract<float>(point[0]),
-        p::extract<float>(point[1]),
-        p::extract<float>(point[2]),
+            p::extract<float>(point[0]),
+            p::extract<float>(point[1]),
+            p::extract<float>(point[2]),
     };
 }
 
@@ -12,12 +12,12 @@ p::tuple pointToTuple(Grid::Point point) {
     return p::make_tuple(point[0], point[1], point[2]);
 }
 
-np::ndarray matToNdarray(const cv::Mat& mat) {
+np::ndarray matToNdarray(const cv::Mat &mat) {
     return np::from_data(
-        mat.data, np::dtype::get_builtin<unsigned char>(),
-        p::make_tuple(mat.rows, mat.cols, 3),
-        p::make_tuple(mat.cols * 3, 3, 1),
-        p::object()
+            mat.data, np::dtype::get_builtin<unsigned char>(),
+            p::make_tuple(mat.rows, mat.cols, 3),
+            p::make_tuple(mat.cols * 3, 3, 1),
+            p::object()
     ).copy();
 }
 
@@ -29,13 +29,13 @@ const cv::Mat ndarrayToMat(const boost::python::numpy::ndarray &ndarray) {
     return cv::Mat(shape[0], shape[1], CV_8UC3, ndarray.get_data());
 }
 
-p::tuple get(Grid self, const p::tuple& point) {
+p::tuple get(Grid self, const p::tuple &point) {
     std::pair<Grid::Point, cv::Mat> ret = self.get(tupleToPoint(point));
 
     return p::make_tuple(pointToTuple(ret.first), matToNdarray(ret.second));
 }
 
-void set(Grid self, const p::tuple& point, np::ndarray &mat) {
+void set(Grid self, const p::tuple &point, np::ndarray &mat) {
     self.set(tupleToPoint(point), ndarrayToMat(mat));
 }
 
@@ -45,7 +45,7 @@ p::list list(Grid self) {
     for (const auto &el : self.list()) {
         list.append(p::make_tuple(pointToTuple(el.first), el.second));
     }
-    
+
     return list;
 }
 

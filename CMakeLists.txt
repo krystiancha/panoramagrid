@@ -7,19 +7,11 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 ##############################################
 # Declare dependencies
 
+find_package(Boost REQUIRED COMPONENTS python3 numpy3)
 find_package(OpenCV REQUIRED COMPONENTS core imgcodecs)
 find_package(glfw3 REQUIRED)
+find_package(PythonLibs 3 REQUIRED)
 
-find_program(GLAD glad)
-if (NOT GLAD)
-    message(FATAL_ERROR "glad not found in your PATH. Go to https://github.com/Dav1dde/glad for details. "
-            "You can install it via pip: pip install glad")
-endif ()
-add_custom_command(OUTPUT ${PROJECT_SOURCE_DIR}/src/glad.c
-        ${PROJECT_SOURCE_DIR}/include/glad/glad.h
-        ${PROJECT_SOURCE_DIR}/include/KHR/khrplatform.h
-        COMMAND ${GLAD} --profile core --out-path ${PROJECT_SOURCE_DIR} --api gl= --generator c --spec gl
-        COMMENT "Generating sources for glad")
 add_library(glad src/glad.c)
 target_include_directories(glad
     PUBLIC
@@ -32,21 +24,19 @@ target_link_libraries(glad dl)
 # Create target and set properties
 
 add_library(panoramagrid
-    src/panoramagrid/camera.cpp
-    src/panoramagrid/cubemapmaterial.cpp
-    src/panoramagrid/cubemesh.cpp
-    src/panoramagrid/grid.cpp
-    src/panoramagrid/material.cpp
-    src/panoramagrid/mesh.cpp
-    src/panoramagrid/node.cpp
-    src/panoramagrid/renderer.cpp
-    src/panoramagrid/spheremesh.cpp
-    src/panoramagrid/uvmaterial.cpp
-    src/panoramagrid/gl/glrenderer.cpp
-    src/panoramagrid/gl/shader.cpp
-    src/panoramagrid/gl/applications/cubemapviewer.cpp
-    src/panoramagrid/gl/applications/equirectviewer.cpp
-    src/panoramagrid/gl/applications/glapplication.cpp
+    src/camera.cpp
+    src/cubemapmaterial.cpp
+    src/cubemesh.cpp
+    src/glapplication.cpp
+    src/glrenderer.cpp
+    src/grid.cpp
+    src/material.cpp
+    src/mesh.cpp
+    src/node.cpp
+    src/renderer.cpp
+    src/shader.cpp
+    src/spheremesh.cpp
+    src/uvmaterial.cpp
 )
 add_library(Panoramagrid::Panoramagrid ALIAS panoramagrid)
 target_include_directories(panoramagrid
@@ -65,13 +55,33 @@ target_link_libraries(panoramagrid
         glad
 )
 
+add_library(gridpy src/gridpy.cpp)
+set_target_properties(gridpy PROPERTIES PREFIX "")
+target_include_directories(gridpy
+    PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PRIVATE
+        ${PYTHON_INCLUDE_DIRS}
+)
+target_compile_features(gridpy PRIVATE cxx_auto_type)
+target_compile_options(gridpy PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall>)
+target_link_libraries(gridpy
+    PUBLIC
+        Boost::python3
+        Boost::numpy3
+        opencv_core
+    PRIVATE
+        ${PYTHON_LIBRARIES}
+)
+
 ##############################################
 # Installation instructions
 
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/Panoramagrid)
 
-install(TARGETS panoramagrid glad
+install(TARGETS panoramagrid glad gridpy
     EXPORT panoramagrid-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -115,3 +125,4 @@ export(EXPORT panoramagrid-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/Panoramagrid
 export(PACKAGE Panoramagrid)
 
 add_subdirectory(tools)
+add_subdirectory(examples)

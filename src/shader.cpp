@@ -1,5 +1,4 @@
 #include <cstring>
-#include <memory>
 #include <panoramagrid/gl/shader.hpp>
 
 namespace panoramagrid::gl {
@@ -40,7 +39,7 @@ namespace panoramagrid::gl {
             auto infoLog = new GLchar[params];
             glGetShaderInfoLog(shader, params, nullptr, infoLog);
             throw std::logic_error(
-                "The compilation of the " + getShaderName(T) + " was unsuccessful. Info log:\n" + infoLog
+                    "The compilation of the " + getShaderName(T) + " was unsuccessful. Info log:\n" + infoLog
             );
         }
 
@@ -67,8 +66,8 @@ namespace panoramagrid::gl {
     std::string Shader::getShaderName(GLenum type) {
         try {
             return std::map<GLenum, std::string>{
-                {GL_VERTEX_SHADER,   "vertex shader"},
-                {GL_FRAGMENT_SHADER, "fragment shader"},
+                    {GL_VERTEX_SHADER,   "vertex shader"},
+                    {GL_FRAGMENT_SHADER, "fragment shader"},
             }.at(type);
         } catch (std::out_of_range &e) {
             return "unknown shader";

@@ -3,22 +3,25 @@
 namespace panoramagrid {
 
     std::array<float, 3> rotateVector(const std::array<float, 3> &vector, const std::array<float, 4> &quaternion);
+
     std::array<float, 4> multiplyQuaternions(std::array<float, 4> a, std::array<float, 4> b);
+
     std::array<float, 4> rpyToQuaternion(float yaw, float pitch, float roll);
+
     std::array<float, 4> inverse(std::array<float, 4> quaternion);
 
     Camera::Camera(float aspectRatio, float fov, const std::array<float, 3> &position,
-        const std::array<float, 4> &orientation)
-        : position(position), orientation(orientation), fov(fov), aspectRatio(aspectRatio) {}
+                   const std::array<float, 4> &orientation)
+            : aspectRatio(aspectRatio), fov(fov), position(position), orientation(orientation) {}
 
     void Camera::setRelativePosition(const std::array<float, 3> &position) {
         auto currentPosition = getPosition();
         auto absPosition = rotateVector(position, inverse(orientation));
         setPosition({
-            currentPosition[0] + absPosition[0],
-            currentPosition[1] + absPosition[1],
-            currentPosition[2] + absPosition[2],
-        });
+                            currentPosition[0] + absPosition[0],
+                            currentPosition[1] + absPosition[1],
+                            currentPosition[2] + absPosition[2],
+                    });
     }
 
     void Camera::setRelativeOrientation(const std::array<float, 3> &rpy) {
@@ -65,33 +68,33 @@ namespace panoramagrid {
 
     std::array<float, 3> rotateVector(const std::array<float, 3> &vector, const std::array<float, 4> &quaternion) {
         float s = quaternion[3];
-        std::array<float, 3> u {quaternion[0], quaternion[1], quaternion[2]};
+        std::array<float, 3> u{quaternion[0], quaternion[1], quaternion[2]};
 
         float dot1 = u[0] * vector[0] + u[1] * vector[1] + u[2] * vector[2];
-        std::array<float, 3> v1 {2 * dot1 * u[0], 2 * dot1 * u[1], 2 * dot1 * u[2]};
+        std::array<float, 3> v1{2 * dot1 * u[0], 2 * dot1 * u[1], 2 * dot1 * u[2]};
 
-        float dot2 = u[0] * u[0] + u[1] * u[1] +u[2] * u[2];
-        std::array<float, 3> v2 {(s * s - dot2) * vector[0], (s * s - dot2) * vector[1], (s * s - dot2) * vector[2]};
+        float dot2 = u[0] * u[0] + u[1] * u[1] + u[2] * u[2];
+        std::array<float, 3> v2{(s * s - dot2) * vector[0], (s * s - dot2) * vector[1], (s * s - dot2) * vector[2]};
 
-        std::array<float, 3> v3 {
-            2 * s * (u[1] * vector[2] - vector[1] * u[2]),
-            2 * s * (vector[0] * u[2] - u[0] * vector[2]),
-            2 * s * (u[0] * vector[1] - vector[0] * u[1]),
+        std::array<float, 3> v3{
+                2 * s * (u[1] * vector[2] - vector[1] * u[2]),
+                2 * s * (vector[0] * u[2] - u[0] * vector[2]),
+                2 * s * (u[0] * vector[1] - vector[0] * u[1]),
         };
 
         return {
-            v1[0] + v2[0] + v3[0],
-            v1[1] + v2[1] + v3[1],
-            v1[2] + v2[2] + v3[2],
+                v1[0] + v2[0] + v3[0],
+                v1[1] + v2[1] + v3[1],
+                v1[2] + v2[2] + v3[2],
         };
     }
 
     std::array<float, 4> multiplyQuaternions(std::array<float, 4> a, std::array<float, 4> b) {
         return {
-            a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0],
-            -a[0] * b[2] + a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
-            a[0] * b[1] - a[1] * b[0] + a[2] * b[3] + a[3] * b[2],
-            -a[0] * b[0] - a[1] * b[1] - a[2] * b[2] + a[3] * b[3],
+                a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0],
+                -a[0] * b[2] + a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
+                a[0] * b[1] - a[1] * b[0] + a[2] * b[3] + a[3] * b[2],
+                -a[0] * b[0] - a[1] * b[1] - a[2] * b[2] + a[3] * b[3],
         };
     }
 
@@ -106,26 +109,27 @@ namespace panoramagrid {
         float cr = cosf(roll * 0.5f);
         float sr = sinf(roll * 0.5f);
 
-        std::array<float, 4> q {
-            cy * cp * sr - sy * sp * cr,
-            sy * cp * sr + cy * sp * cr,
-            sy * cp * cr - cy * sp * sr,
-            cy * cp * cr + sy * sp * sr,
+        std::array<float, 4> q{
+                cy * cp * sr - sy * sp * cr,
+                sy * cp * sr + cy * sp * cr,
+                sy * cp * cr - cy * sp * sr,
+                cy * cp * cr + sy * sp * sr,
         };
 
         return q;
     }
 
     float norm(std::array<float, 4> quaternion) {
-        return sqrtf(quaternion[0] * quaternion[0] + quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2] + quaternion[3] * quaternion[3]);
+        return sqrtf(quaternion[0] * quaternion[0] + quaternion[1] * quaternion[1] + quaternion[2] * quaternion[2] +
+                     quaternion[3] * quaternion[3]);
     }
 
     std::array<float, 4> conjugate(std::array<float, 4> quaternion) {
         return {
-            -quaternion[0],
-            -quaternion[1],
-            -quaternion[2],
-            quaternion[3],
+                -quaternion[0],
+                -quaternion[1],
+                -quaternion[2],
+                quaternion[3],
         };
     }
 
@@ -137,10 +141,10 @@ namespace panoramagrid {
         std::array<float, 4> conj = conjugate(quaternion);
 
         return {
-            conj[0] * absolute,
-            conj[1] * absolute,
-            conj[2] * absolute,
-            conj[3] * absolute,
+                conj[0] * absolute,
+                conj[1] * absolute,
+                conj[2] * absolute,
+                conj[3] * absolute,
         };
     }
 

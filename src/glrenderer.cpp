@@ -4,7 +4,7 @@
 namespace panoramagrid::gl {
 
     GlRenderer::GlRenderer(int width, int height)
-        : Renderer(width, height) {}
+            : Renderer(width, height) {}
 
     void GlRenderer::render(std::shared_ptr<panoramagrid::Node> node) {
         bindVao(node->getMesh());
@@ -15,33 +15,34 @@ namespace panoramagrid::gl {
         glm::mat4 model = glm::translate(toGlm(node->getPosition()));
         auto quat = getCamera()->getOrientation();
         auto pos = getCamera()->getPosition();
-        glm::mat4 view = glm::toMat4(glm::quat(quat[3], quat[0], quat[1], quat[2])) * glm::translate(glm::vec3(pos[0], pos[1], pos[2]));
+        glm::mat4 view = glm::toMat4(glm::quat(quat[3], quat[0], quat[1], quat[2])) *
+                         glm::translate(glm::vec3(pos[0], pos[1], pos[2]));
         glm::mat4 projection = glm::perspective(getCamera()->getFov(), getCamera()->getAspectRatio(), 0.1f, 100.0f);
         glUniformMatrix4fv(mvpUniform, 1, GL_FALSE, glm::value_ptr(projection * view * model));
 
         glDrawElements(
-            getDrawMethod(node->getMesh()->getMethod()),
-            static_cast<GLsizei>(node->getMesh()->getIndices().size()),
-            GL_UNSIGNED_INT,
-            nullptr
+                getDrawMethod(node->getMesh()->getMethod()),
+                static_cast<GLsizei>(node->getMesh()->getIndices().size()),
+                GL_UNSIGNED_INT,
+                nullptr
         );
     }
 
     GLenum GlRenderer::getDrawMethod(Mesh::DrawMethod method) {
         return std::map<Mesh::DrawMethod, GLenum>{
-            {Mesh::DrawMethod::TRIANGLE_STRIP, GL_TRIANGLE_STRIP},
-            {Mesh::DrawMethod::TRIANGLES,      GL_TRIANGLES},
+                {Mesh::DrawMethod::TRIANGLE_STRIP, GL_TRIANGLE_STRIP},
+                {Mesh::DrawMethod::TRIANGLES,      GL_TRIANGLES},
         }.at(method);
     }
 
     std::map<GLenum, std::pair<int, int>> GlRenderer::getCubemapSides() {
         return std::map<GLenum, std::pair<int, int>>{
-            {GL_TEXTURE_CUBE_MAP_POSITIVE_X, std::make_pair<int, int>(2, 1)},
-            {GL_TEXTURE_CUBE_MAP_NEGATIVE_X, std::make_pair<int, int>(0, 1)},
-            {GL_TEXTURE_CUBE_MAP_POSITIVE_Y, std::make_pair<int, int>(1, 0)},
-            {GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, std::make_pair<int, int>(1, 2)},
-            {GL_TEXTURE_CUBE_MAP_POSITIVE_Z, std::make_pair<int, int>(1, 1)},
-            {GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, std::make_pair<int, int>(3, 1)},
+                {GL_TEXTURE_CUBE_MAP_POSITIVE_X, std::make_pair<int, int>(2, 1)},
+                {GL_TEXTURE_CUBE_MAP_NEGATIVE_X, std::make_pair<int, int>(0, 1)},
+                {GL_TEXTURE_CUBE_MAP_POSITIVE_Y, std::make_pair<int, int>(1, 0)},
+                {GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, std::make_pair<int, int>(1, 2)},
+                {GL_TEXTURE_CUBE_MAP_POSITIVE_Z, std::make_pair<int, int>(1, 1)},
+                {GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, std::make_pair<int, int>(3, 1)},
         };
     }
 
@@ -64,16 +65,16 @@ namespace panoramagrid::gl {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
             glBufferData(
-                GL_ARRAY_BUFFER,
-                mesh->getVertices().size() * sizeof(GLint),
-                mesh->getVertices().data(),
-                GL_STATIC_DRAW
+                    GL_ARRAY_BUFFER,
+                    mesh->getVertices().size() * sizeof(GLint),
+                    mesh->getVertices().data(),
+                    GL_STATIC_DRAW
             );
             glBufferData(
-                GL_ELEMENT_ARRAY_BUFFER,
-                mesh->getIndices().size() * sizeof(GLint),
-                mesh->getIndices().data(),
-                GL_STATIC_DRAW
+                    GL_ELEMENT_ARRAY_BUFFER,
+                    mesh->getIndices().size() * sizeof(GLint),
+                    mesh->getIndices().data(),
+                    GL_STATIC_DRAW
             );
 
             glEnableVertexAttribArray(0);
@@ -81,12 +82,12 @@ namespace panoramagrid::gl {
 
             glEnableVertexAttribArray(1);
             glVertexAttribPointer(
-                1,
-                2,
-                GL_FLOAT,
-                GL_FALSE,
-                5 * sizeof(float),
-                reinterpret_cast<const void *>(3 * sizeof(float))
+                    1,
+                    2,
+                    GL_FLOAT,
+                    GL_FALSE,
+                    5 * sizeof(float),
+                    reinterpret_cast<const void *>(3 * sizeof(float))
             );
             glBindVertexArray(vao);
 
@@ -215,7 +216,7 @@ namespace panoramagrid::gl {
 
             for (auto element : getCubemapSides()) {
                 cv::Mat side = texture(
-                    cv::Rect(element.second.first * sideDim, element.second.second * sideDim, sideDim, sideDim));
+                        cv::Rect(element.second.first * sideDim, element.second.second * sideDim, sideDim, sideDim));
 
                 glTexImage2D(element.first, 0, GL_RGB, sideDim, sideDim, 0, GL_BGR, GL_UNSIGNED_BYTE, side.ptr());
             }
@@ -227,7 +228,7 @@ namespace panoramagrid::gl {
             glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
         } else {
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture.cols, texture.rows, 0, GL_BGR, GL_UNSIGNED_BYTE,
-                texture.ptr());
+                         texture.ptr());
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

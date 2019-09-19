@@ -12,10 +12,10 @@ namespace panoramagrid {
     class Node {
     public:
         Node(
-            const std::shared_ptr<Mesh> &mesh, const std::shared_ptr<Material> &material,
-            const std::array<float, 3> &position = {0, 0, 0},
-            const std::array<float, 3> &orientation = {0, 0, 0}, // rpy
-            const std::array<float, 3> &scale = {1, 1, 1}
+                const std::shared_ptr<Mesh> &mesh, const std::shared_ptr<Material> &material,
+                const std::array<float, 3> &position = {0, 0, 0},
+                const std::array<float, 3> &orientation = {0, 0, 0}, // rpy
+                const std::array<float, 3> &scale = {1, 1, 1}
         );
 
         const std::shared_ptr<Mesh> &getMesh() const;

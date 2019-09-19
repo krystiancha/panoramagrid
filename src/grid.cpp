@@ -1,5 +1,4 @@
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/algorithm/string/find.hpp>
 #include <boost/qvm/all.hpp>
 #include <panoramagrid/grid.hpp>
 
@@ -44,7 +43,7 @@ namespace panoramagrid {
 
         zip_uint64_t closestIndex = 0;
         Point closestPoint;
-        unsigned long closestSize = 0;
+        long closestSize = 0;
         float closestDistance = std::numeric_limits<float>::max();
         for (std::vector<Grid::Point>::size_type i = 0; i < points.size(); ++i) {
             if (points[i].second == 0) {
@@ -52,9 +51,9 @@ namespace panoramagrid {
             }
             Point current = points[i].first;
             float distance = sqrtf(
-                (current[0] - point[0]) * (current[0] - point[0])
-                + (current[1] - point[1]) * (current[1] - point[1])
-                + (current[2] - point[2]) * (current[2] - point[2])
+                    (current[0] - point[0]) * (current[0] - point[0])
+                    + (current[1] - point[1]) * (current[1] - point[1])
+                    + (current[2] - point[2]) * (current[2] - point[2])
             );
             if (distance < closestDistance) {
                 closestIndex = i;
@@ -67,7 +66,7 @@ namespace panoramagrid {
         zip_file_t *file = zip_fopen_index(archive, closestIndex, 0);
         if (file == nullptr) {
             throw std::runtime_error(
-                "Could not open file " + std::to_string(closestIndex) + ": " + std::string(zip_strerror(archive))
+                    "Could not open file " + std::to_string(closestIndex) + ": " + std::string(zip_strerror(archive))
             );
         }
 
@@ -75,9 +74,9 @@ namespace panoramagrid {
         zip_int64_t bytesRead = zip_fread(file, buffer.data(), closestSize);
         if (bytesRead != closestSize) {
             throw std::runtime_error(
-                "Error reading file" + std::to_string(closestIndex)
-                + ": Read " + std::to_string(bytesRead) + " bytes instead of expected "
-                + std::to_string(closestSize) + " bytes"
+                    "Error reading file" + std::to_string(closestIndex)
+                    + ": Read " + std::to_string(bytesRead) + " bytes instead of expected "
+                    + std::to_string(closestSize) + " bytes"
             );
         }
 
@@ -92,7 +91,7 @@ namespace panoramagrid {
         return std::make_pair(closestPoint, mat);
     }
 
-    unsigned long Grid::set(Point point, const cv::Mat& mat) {
+    unsigned long Grid::set(Point point, const cv::Mat &mat) {
         if (archive == nullptr) {
             throw std::runtime_error("open() has not been called");
         }
@@ -129,7 +128,7 @@ namespace panoramagrid {
             zip_stat_t sb;
             if (zip_stat_index(archive, i, ZIP_STAT_NAME | ZIP_STAT_COMP_SIZE, &sb) != 0) {
                 throw std::runtime_error(
-                    "Could not info about file " + std::to_string(i) + ": " + std::string(zip_strerror(archive))
+                        "Could not info about file " + std::to_string(i) + ": " + std::string(zip_strerror(archive))
                 );
             }
 
@@ -146,7 +145,7 @@ namespace panoramagrid {
 
         if (zip_delete(archive, index) != 0) {
             throw std::runtime_error(
-                "Could not delete file " + std::to_string(index) + ": " + std::string(zip_strerror(archive))
+                    "Could not delete file " + std::to_string(index) + ": " + std::string(zip_strerror(archive))
             );
         }
     }

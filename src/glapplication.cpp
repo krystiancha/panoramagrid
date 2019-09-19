@@ -1,4 +1,4 @@
-#include <panoramagrid/gl/applications/glapplication.hpp>
+#include <panoramagrid/gl/glapplication.hpp>
 #include <panoramagrid/gl/glrenderer.hpp>
 #include <iostream>
 
@@ -7,19 +7,19 @@ namespace panoramagrid::gl::applications {
     void GlApplication::parseArgs(int argc, char **argv) {
         boost::program_options::options_description opt("Allowed options");
         opt.add_options()
-            ("help,h", "Print help")
-            ("width", boost::program_options::value<int>()->default_value(1280))
-            ("height", boost::program_options::value<int>()->default_value(720))
-            ("fullscreen,f", "View in fullscreen");
+                ("help,h", "Print help")
+                ("width", boost::program_options::value<int>()->default_value(1280))
+                ("height", boost::program_options::value<int>()->default_value(720))
+                ("fullscreen,f", "View in fullscreen");
 
         options.add(opt);
 
         boost::program_options::store(
-            boost::program_options::command_line_parser(argc, argv)
-                .options(options)
-                .positional(positionalOptions)
-                .run(),
-            vm);
+                boost::program_options::command_line_parser(argc, argv)
+                        .options(options)
+                        .positional(positionalOptions)
+                        .run(),
+                vm);
 
         if (vm.count("help")) {
             std::cout << opt << std::endl;
@@ -27,8 +27,8 @@ namespace panoramagrid::gl::applications {
         }
 
         renderer = std::make_shared<GlRenderer>(
-            vm["width"].as<int>(),
-            vm["height"].as<int>());
+                vm["width"].as<int>(),
+                vm["height"].as<int>());
     }
 
     void GlApplication::initGlfw() {
@@ -44,11 +44,11 @@ namespace panoramagrid::gl::applications {
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         glfwWindowHint(GLFW_FOCUSED, GLFW_FALSE);
         window = glfwCreateWindow(
-            renderer->getWidth(),
-            renderer->getHeight(),
-            "Cubemap Viewer",
-            vm.count("fullscreen") ? glfwGetPrimaryMonitor() : nullptr,
-            nullptr
+                renderer->getWidth(),
+                renderer->getHeight(),
+                "Cubemap Viewer",
+                vm.count("fullscreen") ? glfwGetPrimaryMonitor() : nullptr,
+                nullptr
         );
         glfwSetWindowUserPointer(window, this);
         glfwMakeContextCurrent(window);
