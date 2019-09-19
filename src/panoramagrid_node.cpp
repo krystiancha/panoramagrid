@@ -3,6 +3,7 @@
 #include <tf2_kdl/tf2_kdl.h>
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
+#include <visualization_msgs/Marker.h>
 
 #include <panoramagrid/grid.hpp>
 #include <panoramagrid/gl/glrenderer.hpp>
@@ -108,10 +109,11 @@ public:
         return renderer->getMat();
     }
 
+    pg::Grid grid;
+
 private:
     int width, height;
     std::string path;
-    pg::Grid grid;
     std::shared_ptr<pg::Node> node = std::make_shared<pg::Node>(std::make_shared<pg::SphereMesh>(18, 36),
         std::make_shared<pg::UvMaterial>());
     std::pair<KDL::Frame, cv::Mat> cache;
@@ -129,6 +131,27 @@ int main(int argc, char *argv[]) {
 
     PanoramagridRosBridge pg(nh);
 
+    // Spawn markers
+    ros::Publisher cubemapMarkerPub = nh.advertise<visualization_msgs::Marker>("cubemap_marker", 0, true);
+    visualization_msgs::Marker cubemapMarker;
+    cubemapMarker.header.frame_id = "map";
+    cubemapMarker.header.stamp = ros::Time();
+    cubemapMarker.type = visualization_msgs::Marker::POINTS;
+    cubemapMarker.action = visualization_msgs::Marker::ADD;
+    cubemapMarker.scale.x = 0.1;
+    cubemapMarker.scale.y = 0.1;
+    cubemapMarker.color.r = 1.0;
+    cubemapMarker.color.g = 0.0;
+    cubemapMarker.color.b = 0.0;
+    cubemapMarker.color.a = 1.0;
+    for (const auto &entry : pg.grid.list()) {
+        geometry_msgs::Point point;
+        point.x = entry.first[0];
+        point.y = entry.first[1];
+        point.z = entry.first[2];
+        cubemapMarker.points.push_back(point);
+    }
+
     std::string globalFrame, cameraFrame;
     nh.param<std::string>("global_frame", globalFrame, "map");
     nh.param<std::string>("camera_frame", cameraFrame, "camera");
@@ -144,6 +167,8 @@ int main(int argc, char *argv[]) {
     cv::TickMeter meter;
     while (nh.ok()) {
         meter.stop(); meter.start();
+
+        cubemapMarkerPub.publish(cubemapMarker);
 
         if (meter.getCounter() > static_cast<int>(fps)) {
             ROS_INFO("%d transforms processed, avg. FPS: %.2f", static_cast<int>(fps), meter.getCounter() / meter.getTimeSec());
