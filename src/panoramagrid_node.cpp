@@ -4,9 +4,10 @@
 #include <tf2_ros/buffer.h>
 #include <tf2_ros/transform_listener.h>
 
-#include <panoramagrid/panoramagrid.hpp>
-#include <panoramagrid/gl/gl.hpp>
+#include <panoramagrid/grid.hpp>
+#include <panoramagrid/gl/glrenderer.hpp>
 #include <panoramagrid/gl/applications/equirectviewer.hpp>
+
 
 namespace pg = panoramagrid;
 
