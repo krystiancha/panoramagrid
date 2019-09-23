@@ -1,0 +1,77 @@
+#!/usr/bin/env python2
+from geometry_msgs.msg import Vector3, Transform, TransformStamped
+from interactive_markers.interactive_marker_server import InteractiveMarkerServer
+from rospy import init_node, spin
+from std_msgs.msg import ColorRGBA, Header
+from tf2_ros import TransformBroadcaster
+from visualization_msgs.msg import InteractiveMarker, Marker, InteractiveMarkerControl
+
+if __name__ == '__main__':
+    init_node("interactive_marker")
+
+    server = InteractiveMarkerServer("simple_marker")
+
+    marker = Marker(
+        type=Marker.CUBE,
+        scale=Vector3(*(3 * [0.45])),
+        color=ColorRGBA(0.5, 0.5, 0.5, 0.75),
+    )
+
+    interactive_marker = InteractiveMarker(
+        header=Header(frame_id="map"),
+        name="interactive_marker",
+        controls=[InteractiveMarkerControl(
+            interaction_mode=InteractiveMarkerControl.MOVE_ROTATE_3D,
+            always_visible=True,
+            markers=[marker],
+        )],
+    )
+
+    control = InteractiveMarkerControl()
+    control.orientation.w = 1
+    control.orientation.x = 1
+    control.orientation.y = 0
+    control.orientation.z = 0
+    control.name = "rotate_x"
+    control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+    interactive_marker.controls.append(control)
+
+    control = InteractiveMarkerControl()
+    control.orientation.w = 1
+    control.orientation.x = 0
+    control.orientation.y = 0
+    control.orientation.z = 1
+    control.name = "rotate_y"
+    control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+    interactive_marker.controls.append(control)
+
+    control = InteractiveMarkerControl()
+    control.orientation.w = 1
+    control.orientation.x = 0
+    control.orientation.y = 1
+    control.orientation.z = 0
+    control.name = "rotate_z"
+    control.interaction_mode = InteractiveMarkerControl.ROTATE_AXIS
+    interactive_marker.controls.append(control)
+
+    broadcaster = TransformBroadcaster()
+
+
+    def process_feedback(feedback):
+        broadcaster.sendTransform(
+            TransformStamped(
+                header=Header(frame_id="map"),
+                child_frame_id='camera',
+                transform=Transform(
+                    translation=feedback.pose.position,
+                    rotation=feedback.pose.orientation,
+                ),
+            ),
+        )
+
+
+    server.insert(interactive_marker, process_feedback)
+    server.applyChanges()
+
+    spin()
+

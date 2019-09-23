@@ -81,7 +81,7 @@ target_link_libraries(gridpy
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/Panoramagrid)
 
-install(TARGETS panoramagrid glad gridpy
+install(TARGETS panoramagrid gridpy glad
     EXPORT panoramagrid-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
