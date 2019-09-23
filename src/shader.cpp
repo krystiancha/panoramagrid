@@ -73,4 +73,43 @@ namespace panoramagrid::gl {
             return "unknown shader";
         }
     }
+
+    std::string Shader::defaultVertexShader = R"glsl(
+        #version 450 core
+        layout (location = 0) in vec3 position;
+        layout (location = 1) in vec2 texcoord;
+        uniform mat4 mvp;
+        uniform bool skybox;
+        out vec3 TexCoord;
+        void main() {
+            vec4 pos = mvp * vec4(position, 1);
+            if (skybox) {
+                gl_Position = pos;
+                TexCoord = position;
+            } else {
+                gl_Position = pos;
+                TexCoord = vec3(texcoord, 0);
+            }
+        }
+    )glsl";
+
+    std::string Shader::cubemapFragmentShader = R"glsl(
+        #version 450 core
+        in vec3 TexCoord;
+        uniform samplerCube sampler;
+        out vec4 color;
+        void main() {
+            color = texture(sampler, TexCoord);
+        }
+    )glsl";
+
+    std::string Shader::sphereFragmentShader = R"glsl(
+        #version 450 core
+        in vec3 TexCoord;
+        uniform sampler2D sampler;
+        out vec4 color;
+        void main() {
+            color = texture(sampler, TexCoord.xy);
+        }
+    )glsl";
 }

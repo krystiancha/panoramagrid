@@ -12,6 +12,8 @@
 
 #include <iostream>
 #include <boost/algorithm/clamp.hpp>
+#include <glm/glm.hpp>
+#include <glm/ext.hpp>
 #include <opencv2/opencv.hpp>
 #include <panoramagrid/gl/glapplication.hpp>
 #include <panoramagrid/cubemesh.hpp>
@@ -90,19 +92,23 @@ public:
             return;
         }
 
-        auto rpy = renderer->getCamera()->getOrientation();
+        if (rightHeld) {
+            r = static_cast<float>(r - (xpos - lastCursorX) * cursorSensitivity);
+        } else {
+            p = boost::algorithm::clamp<float>(
+                    static_cast<float>(p - (ypos - lastCursorY) * cursorSensitivity),
+                    -M_PI_2f32,
+                    M_PI_2f32
+            );
+            y = static_cast<float>(y + (xpos - lastCursorX) * cursorSensitivity);
+        }
 
-        renderer->getCamera()->setOrientation({
-                                                      0,
-                                                      boost::algorithm::clamp<float>(
-                                                              static_cast<float>(rpy[1] + (ypos - lastCursorY) *
-                                                                                          cursorSensitivity),
-                                                              -M_PI_2f32 + std::numeric_limits<float>::epsilon(),
-                                                              M_PI_2f32 - std::numeric_limits<float>::epsilon()
-                                                      ),
-                                                      static_cast<float>(rpy[2] -
-                                                                         (xpos - lastCursorX) * cursorSensitivity)
-                                              });
+        glm::mat4 matp(1), maty(1), matr(1);
+        matp = glm::rotate(matp, p, glm::vec3(1, 0, 0));
+        maty = glm::rotate(maty, y, glm::vec3(0, -1, 0));
+        matr = glm::rotate(matr, r, glm::vec3(0, 0, -1));
+        glm::quat quat = glm::quat_cast(matr * matp * maty);
+        renderer->getCamera()->setOrientation({quat[0], quat[1], quat[2], quat[3]});
 
         lastCursorX = xpos;
         lastCursorY = ypos;
@@ -139,6 +145,8 @@ public:
 protected:
     double lastCursorX = 0, lastCursorY = 0;
     double cursorSensitivity = 0.002, scrollSensitivity = 0.05;
+    bool rightHeld = false;
+    float r = 0, p = 0, y = 0;
     std::string inputFile = "";
     std::shared_ptr<pg::Node> node = std::make_shared<pg::Node>(std::make_shared<pg::CubeMesh>(),
                                                                 std::make_shared<pg::CubemapMaterial>());

@@ -24,6 +24,10 @@ namespace panoramagrid::gl {
 
         static std::string getShaderName(GLenum type);
 
+        static std::string defaultVertexShader;
+        static std::string cubemapFragmentShader;
+        static std::string sphereFragmentShader;
+
     private:
         GLuint program = 0;
         std::map<GLenum, GLuint> shaders;

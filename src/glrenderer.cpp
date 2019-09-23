@@ -104,55 +104,9 @@ namespace panoramagrid::gl {
             shader = shaders.at(material);
         } catch (std::out_of_range &e) {
             if (material->isCubemap()) {
-                shader = std::make_shared<Shader>(R"glsl(
-                #version 450 core
-                layout (location = 0) in vec3 position;
-                layout (location = 1) in vec2 texcoord;
-                uniform mat4 mvp;
-                uniform bool skybox;
-                out vec3 TexCoord;
-                void main() {
-                    vec4 pos = mvp * vec4(position, 1);
-                    gl_Position = pos;
-                    if (skybox) {
-                        gl_Position = pos.xyww;
-                    }
-                    TexCoord = position;
-                }
-                )glsl", R"glsl(
-                #version 450 core
-                in vec3 TexCoord;
-                uniform samplerCube sampler;
-                out vec4 color;
-                void main() {
-                    color = texture(sampler, TexCoord);
-                }
-                )glsl");
+                shader = std::make_shared<Shader>(Shader::defaultVertexShader, Shader::cubemapFragmentShader);
             } else {
-                shader = std::make_shared<Shader>(R"glsl(
-                #version 450 core
-                layout (location = 0) in vec3 position;
-                layout (location = 1) in vec2 texcoord;
-                uniform mat4 mvp;
-                uniform bool skybox;
-                out vec3 TexCoord;
-                void main() {
-                    vec4 pos = mvp * vec4(position, 1);
-                    gl_Position = pos;
-                    if (skybox) {
-                        gl_Position = pos.xyww;
-                    }
-                    TexCoord = vec3(texcoord, 0);
-                }
-                )glsl", R"glsl(
-                #version 450 core
-                in vec3 TexCoord;
-                uniform sampler2D sampler;
-                out vec4 color;
-                void main() {
-                    color = texture(sampler, TexCoord.xy);
-                }
-                )glsl");
+                shader = std::make_shared<Shader>(Shader::defaultVertexShader, Shader::sphereFragmentShader);
             }
         }
 
@@ -240,7 +194,7 @@ namespace panoramagrid::gl {
         glPixelStorei(GL_UNPACK_ALIGNMENT, alignment);
         glPixelStorei(GL_UNPACK_ROW_LENGTH, rowLength);
 
-        glUniform1i(usedShader->getUniformLocation("skybox"), false);
+        glUniform1i(usedShader->getUniformLocation("skybox"), material->isCubemap());
     }
 
     glm::vec3 GlRenderer::toGlm(std::array<float, 3> vector) {
