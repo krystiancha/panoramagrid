@@ -1,30 +1,37 @@
 # Panoramagrid
 
+**WORK IN PROGRESS**
+
+A library for visualizing, manipulating and searching grids of panoramic images.
+
 # Requirements
 
-- OpenCV
-- GLFW
-- GLAD
-- dl
+- [Boost](https://www.boost.org/)
+- [OpenCV](https://opencv.org/)
+- [GLFW](https://www.glfw.org/)
+- Python 3 headers
 
-## Docker
+# Demos
 
-### Run the container
+Docker is used as a platform to run demos.
+
+## Run the container
 
 ```bash
-# Enable GUI in a container, may not be needed depending on your configuration
-xhost +local:panoramagrid  
+xhost +local:panoramagrid
 
 docker run \
-  --device /dev/dri:/dev/dri \
-  --env DISPLAY \
-  --hostname panoramagrid \
-  --interactive \
-  --volume /tmp/.X11-unix:/tmp/.X11-unix \
-  --tty \
-  --user developer \
-  protecto/panoramagrid
-  
+    --name panoramagrid \
+    --hostname panoramagrid \
+    --env DISPLAY \
+    --env QT_X11_NO_MITSHM=1 \
+    --device=/dev/dri:/dev/dri \
+    --volume /tmp/.X11-unix:/tmp/.X11-unix:rw \
+    --rm \
+    --interactive \
+    --tty \
+    protecto/panoramagrid
+
 xhost -local:panoramagrid
 ```
 
@@ -32,6 +39,9 @@ xhost -local:panoramagrid
 
 ```bash
 # While in the container...
+
+# Run the ROS demo
+roslaunch panoramagrid demo.launch
 
 # Preview an equirectangular projection as a perspective view
 # (use your mouse to move the camera around)
