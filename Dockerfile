@@ -11,6 +11,7 @@ RUN set -ex && \
     libglfw3-dev \
     libglm-dev \
     linux-tools-generic \
+    mercurial \
   && rm -rf /var/lib/apt/lists/*
 
 
@@ -29,6 +30,11 @@ RUN set -ex && \
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
+# Install gazebo models
+RUN set -ex && \
+  mkdir /root/.gazebo && \
+  cd /root/.gazebo && \
+  hg clone https://bitbucket.org/osrf/gazebo_models models
 
 # Install panoramagrid ros package
 

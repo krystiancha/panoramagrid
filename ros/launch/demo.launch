@@ -13,14 +13,14 @@
         required="true"
         output="screen"
     />
-    <node
+    <!--<node
         pkg="panoramagrid"
         type="interactive_marker"
         name="interactive_marker"
         args=""
         required="true"
         output="screen"
-    />
+    />-->
     <node
         pkg="panoramagrid"
         type="node"
@@ -30,5 +30,13 @@
         if="$(arg run_node)"
     >
         <param name="path" value="/usr/local/share/panoramagrid/grid.zip" />
+        <param name="global_frame" value="world" />
     </node>
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="world_name" value="$(find panoramagrid)/worlds/demo.world"/>
+    </include>
+    <include file="$(find rcprg_gazebo_utils)/launch/gazebo_publish_ros_tf_object.launch">
+        <arg name="link_name" value="camera::link"/>
+	<arg name="frame_id" value="camera"/>
+    </include>
 </launch>

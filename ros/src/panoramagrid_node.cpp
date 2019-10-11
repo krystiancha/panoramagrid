@@ -18,11 +18,12 @@ namespace pg = panoramagrid;
 class PanoramagridRosBridge : public pg::gl::applications::GlApplication {
 public:
     PanoramagridRosBridge(ros::NodeHandle nh) {
-        nh.param<int>("width", width, 1280);
-        nh.param<int>("height", height, 720);
+        nh.param<int>("width", width, 1920);
+        nh.param<int>("height", height, 1080);
 
         ROS_INFO("Creating a renderer with resolution: %dx%d", width, height);
         renderer = std::make_shared<pg::gl::GlRenderer>(width, height);
+        renderer->getCamera()->setFov(1.047);
 
         nh.param<std::string>("path", path, "");
         if (path == "") {
@@ -125,9 +126,13 @@ int main(int argc, char *argv[]) {
 
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener(tfBuffer);
+    cv::Mat gazebo_img;
 
     image_transport::ImageTransport it(nh);
     image_transport::Publisher pub = it.advertise("image", 1);
+    image_transport::Subscriber sub = it.subscribe("/gazebo_camera/image_raw", 1, [&](const sensor_msgs::ImageConstPtr &msg) {
+        gazebo_img = cv_bridge::toCvShare(msg, "bgr8")->image;
+    });
 
     PanoramagridRosBridge pg(nh);
 
@@ -175,10 +180,28 @@ int main(int argc, char *argv[]) {
             meter.reset();
         }
 
+        if (gazebo_img.empty()) {
+            ros::spinOnce();
+            rate.sleep();
+            continue;
+        }
+
         try {
             geometry_msgs::TransformStamped transformStamped = tfBuffer.lookupTransform(globalFrame, cameraFrame, ros::Time(0));
             KDL::Frame frame = tf2::transformToKDL(transformStamped);
-            pub.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", pg.render(frame)).toImageMsg());
+            cv::Mat img = pg.render(frame).clone();
+
+	    // TODO: way too slow
+	    for (int i = 0; i < img.rows; ++i) {
+                for (int j = 0; j < img.cols; ++j) {
+                    const cv::Vec3b& pixel = gazebo_img.at<cv::Vec3b>(i, j);
+		    if (!(pixel[0] == 178 && pixel[1] == 178 && pixel[2] == 178)) {
+			img.at<cv::Vec3b>(i, j) = pixel;
+		    }
+		}
+	    }
+
+            pub.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg());
         } catch (tf2::TransformException &ex) {
             ROS_WARN("Transform exception: %s", ex.what());
 	    }
