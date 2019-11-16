@@ -1,7 +1,5 @@
 from math import sqrt, pow
 
-import alphashape
-from descartes import PolygonPatch
 from matplotlib.backends.backend_qt5agg import (FigureCanvas)
 from matplotlib.backends.qt_compat import QtCore, QtWidgets
 from matplotlib.figure import Figure
@@ -26,6 +24,7 @@ class Plot(QtWidgets.QWidget):
         self.axes.axis('equal')
 
         self.update_plot()
+        self.axes.autoscale()
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.canvas)
@@ -58,13 +57,6 @@ class Plot(QtWidgets.QWidget):
         if current_index.isValid() and current_index.row() < len(data):
             x, y, _ = data[current_index.row()][0]
             self.axes.plot([x], [y], 'o', markersize=10, fillstyle='none', markeredgewidth=2, color='#ff7f0e')
-
-        if len(data) >= 3:
-            points, _ = zip(*data)
-            x, y, _ = zip(*points)
-            alpha_shape = alphashape.alphashape(zip(x, y), 0)
-            if alpha_shape.geom_type == 'Polygon':
-                self.axes.add_patch(PolygonPatch(alpha_shape, alpha=0.2))
 
         self.axes.set_xlim(xlim)
         self.axes.set_ylim(ylim)

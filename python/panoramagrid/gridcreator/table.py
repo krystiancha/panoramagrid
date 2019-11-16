@@ -1,8 +1,12 @@
 import numpy as np
+from urllib.error import URLError
 from matplotlib.backends.qt_compat import QtCore, QtWidgets
 
-
 class Table(QtWidgets.QWidget):
+    class BigButton(QtWidgets.QPushButton):
+        def minimumSizeHint(self):
+            return QtCore.QSize(100, 100)
+    
     def __init__(self, item_model, selection_model, camera):
         super().__init__()
 
@@ -11,7 +15,6 @@ class Table(QtWidgets.QWidget):
 
         self.camera = camera
         self.picture_pending_idx = None
-        self.camera.thread.picture_taken.connect(self.update_picture)
 
         self.table_view = QtWidgets.QTableView()
         self.table_view.setModel(item_model)
@@ -22,7 +25,7 @@ class Table(QtWidgets.QWidget):
         self.add_button = QtWidgets.QPushButton("Add row")
         self.add_button.clicked.connect(self.append_point)
 
-        self.picture_button = QtWidgets.QPushButton("Take picture")
+        self.picture_button = Table.BigButton("Take picture")
         self.picture_button.setEnabled(False)
         self.picture_button.clicked.connect(self.take_picture)
 
@@ -35,14 +38,16 @@ class Table(QtWidgets.QWidget):
 
         self.layout = QtWidgets.QVBoxLayout(self)
 
+        self.buttons_layout = QtWidgets.QVBoxLayout()
         self.button_layout = QtWidgets.QHBoxLayout()
         self.button_layout.addWidget(self.add_button)
-        self.button_layout.addWidget(self.picture_button)
         self.button_layout.addWidget(self.delete_button)
         self.button_layout.addWidget(self.deselect_button)
+        self.buttons_layout.addLayout(self.button_layout)
+        self.buttons_layout.addWidget(self.picture_button)
 
         self.layout.addWidget(self.table_view)
-        self.layout.addLayout(self.button_layout)
+        self.layout.addLayout(self.buttons_layout)
         self.setLayout(self.layout)
 
     @QtCore.Slot()
@@ -64,8 +69,10 @@ class Table(QtWidgets.QWidget):
     def take_picture(self):
         current_index = self.selection_model.currentIndex()
         if current_index.isValid():
-            self.picture_pending_idx = current_index.row()
-            self.camera.take_picture()
+            try:
+                self.item_model.update_image(current_index.row(), self.camera.take_picture())
+            except URLError:
+                pass
 
     @QtCore.Slot(np.ndarray)
     def update_picture(self, img):

@@ -1,7 +1,5 @@
 from enum import Enum, unique
 
-import numpy as np
-from gridpy import Grid
 from matplotlib.backends.qt_compat import QtCore
 
 
@@ -12,14 +10,22 @@ class TableModel(QtCore.QAbstractItemModel):
         Y = 1
         IMAGE = 2
 
-    def __init__(self, grid_path):
+    def __init__(self, file):
         super().__init__()
         self._points = []
         self._images = []
-        self.grid = Grid()
-        self.grid.open(grid_path)
-        for point, image_size in self.grid.list():
-            self.append_point(point, image_size)
+        
+        self.file = file
+        try:
+            with open(file, 'r') as f:
+                for line in f:
+                    columns = line.split()
+                    if len(columns) < 2:
+                        columns = [None] + columns
+                    camera, standard = columns
+                    self.append_point(self.std_to_point(standard), camera, noflush=True)
+        except FileNotFoundError:
+            pass
 
     def index(self, row, column, parent=QtCore.QModelIndex()):
         return self.createIndex(row, column)
@@ -42,7 +48,7 @@ class TableModel(QtCore.QAbstractItemModel):
             if column == self.Columns.Y:
                 return self._points[index.row()][1]
             if column == self.Columns.IMAGE:
-                return bool(self._images[index.row()])
+                return self._images[index.row()]
         return None
 
     def setData(self, index, value, role=QtCore.Qt.EditRole):
@@ -63,9 +69,9 @@ class TableModel(QtCore.QAbstractItemModel):
                     self._points[index.row()][element] = float(value)
                 except ValueError:
                     return False
+                
                 if self.is_point_complete(self._points[index.row()]):
-                    self.grid.set(tuple(self._points[index.row()]), np.empty([]))
-                    self.grid.flush()
+                    self.flush_file()
                 return success()
 
     def flags(self, index=QtCore.QModelIndex()):
@@ -87,25 +93,21 @@ class TableModel(QtCore.QAbstractItemModel):
     def get_data(self):
         return [(point, image) for point, image in zip(self._points, self._images) if None not in point]
 
-    def append_point(self, point=(None, None, 0.0), image=None):
+    def append_point(self, point=(None, None, 1.0), image=None, noflush=False):
         self.beginInsertRows(QtCore.QModelIndex(), len(self._points), len(self._points))
         self._points.append(list(point))
-        self._images.append(bool(image))
+        self._images.append(image)
         self.endInsertRows()
-        if self.is_point_complete(point) and image is None:
-            self.grid.set(tuple(point), np.array([]))
-            self.grid.flush()
+        if self.is_point_complete(point) and not noflush:
+            self.flush_file()
 
     def update_image(self, index, image):
         if index >= len(self._points):
             raise Exception()
-        if not isinstance(image, np.ndarray):
+        if not isinstance(image, str):
             raise Exception()
-        if image.size == 0:
-            raise Exception()
-        self._images[index] = True
-        self.grid.set(tuple(self._points[index]), image)
-        self.grid.flush()
+        self._images[index] = image
+        self.flush_file()
         self.dataChanged.emit(
             self.createIndex(index, self.Columns.IMAGE.value),
             self.createIndex(index, self.Columns.IMAGE.value),
@@ -113,13 +115,11 @@ class TableModel(QtCore.QAbstractItemModel):
         )
 
     def remove_point(self, index):
-        if self.is_point_complete(index=index):
-            self.grid.remove(index)
-            self.grid.flush()
         self.beginRemoveRows(QtCore.QModelIndex(), index, index)
         self._points.pop(index)
         self._images.pop(index)
         self.endRemoveRows()
+        self.flush_file()
 
     def is_point_complete(self, point=None, index=None):
         if point is not None and index is not None:
@@ -127,3 +127,19 @@ class TableModel(QtCore.QAbstractItemModel):
         if index is not None:
             point = self._points[index]
         return None not in point
+    
+    def flush_file(self):
+        with open(self.file, "w") as f:
+            f.writelines([
+                f"{image}\t{self.point_to_std(point)}\n" if image else f"{self.point_to_std(point)}\n"
+                for point, image in zip(self._points, self._images)
+            ])
+
+    @staticmethod
+    def std_to_point(name):
+        return map(lambda x: float(x), name.replace('.jpg', '').split('_'))
+
+    @staticmethod
+    def point_to_std(point):
+        x, y, z = point
+        return f"{x:.1f}_{y:.1f}_{z:.1f}.jpg"

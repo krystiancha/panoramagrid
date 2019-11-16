@@ -27,18 +27,16 @@ class MainWidget(QtWidgets.QWidget):
 
         self.stats = Stats(self, self.item_model)
 
-        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout = QtWidgets.QHBoxLayout(self)
+        
+        self.left_layout = QtWidgets.QVBoxLayout()
+        self.left_layout.addWidget(self.stats)
+        self.left_layout.addWidget(self.camera)
+        self.left_layout.addWidget(self.table)
 
-        self.bottom_layout = QtWidgets.QHBoxLayout()
-        self.bottom_layout.addWidget(self.table, 3)
-
-        self.bottom_right_layout = QtWidgets.QVBoxLayout()
-        self.bottom_right_layout.addWidget(self.stats)
-        self.bottom_right_layout.addWidget(self.camera)
-        self.bottom_layout.addLayout(self.bottom_right_layout, 1)
-
+        self.layout.addLayout(self.left_layout)
         self.layout.addWidget(self.plot, 1)
-        self.layout.addLayout(self.bottom_layout, 1)
+
         self.setLayout(self.layout)
 
 

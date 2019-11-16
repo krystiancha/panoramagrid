@@ -15,8 +15,6 @@ class OscApi:
         TAKE = 2
         STATUS = 3
         WAIT = 4
-        DOWNLOAD = 5
-        DELETE = 6
 
     base_url: str
     timeout: float
@@ -51,7 +49,7 @@ class OscApi:
 
         return json.loads(response.read().decode('utf-8'))
 
-    def take_picture(self, delete_local=False):
+    def take_picture(self):
         self.picture_state = self.PictureStates.TAKE
         response = self.execute_command('camera.takePicture')
 
@@ -59,22 +57,12 @@ class OscApi:
             self.picture_state = self.PictureStates.STATUS
             response = self.command_status(response['id'])
             self.picture_state = self.PictureStates.WAIT
-            sleep(2)
+            sleep(1)
 
         if response['state'] != 'done':
             raise Exception
-
-        self.picture_state = self.PictureStates.DOWNLOAD
-        img_buffer = self.request(response['results']['fileUrl'])
-        img = cv.imdecode(np.frombuffer(img_buffer.read(), np.uint8), cv.IMREAD_COLOR)
-
-        if delete_local:
-            self.picture_state = self.PictureStates.DELETE
-            self.execute_command('camera.delete', {'fileUrls': [response['results']['fileUrl']]})
-
-        self.picture_state = self.PictureStates.IDLE
-
-        return img
+        
+        return response['results']['fileUrl'].split('/')[-1]
 
     def live_preview(self):
         return self.request(
