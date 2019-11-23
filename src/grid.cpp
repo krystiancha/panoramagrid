@@ -1,9 +1,10 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/qvm/all.hpp>
 #include <panoramagrid/grid.hpp>
+#include <thread>
+#include <chrono>
 
 namespace panoramagrid {
-
     void Grid::open(const std::string &path) {
         if (archive != nullptr) {
             throw std::runtime_error("Already open");
@@ -15,6 +16,21 @@ namespace panoramagrid {
         archive = zip_open(path.c_str(), ZIP_CREATE, &errorp);
         if (archive == nullptr) {
             throw std::runtime_error("Could not open the archive");
+        }
+
+        auto entries = static_cast<zip_uint64_t>(zip_get_num_entries(archive, 0));
+        for (zip_uint64_t i = 0; i < entries; ++i) {
+            zip_stat_t sb;
+            if (zip_stat_index(archive, i, ZIP_STAT_NAME | ZIP_STAT_COMP_SIZE, &sb) != 0) {
+                throw std::runtime_error(
+                        "Could not info about file " + std::to_string(i) + ": " + std::string(zip_strerror(archive))
+                );
+            }
+
+            if (sb.comp_size > 0) {
+                points.emplace_back(filenameToPoint(sb.name));
+                sizes.emplace_back(sb.comp_size);
+            }
         }
     }
 
@@ -29,9 +45,39 @@ namespace panoramagrid {
         archive = nullptr;
     }
 
-    void Grid::flush() {
-        close();
-        open(path);
+    void Grid::cacheThread() {
+        cacheMutexes.clear();
+        for (Index i = 0; i < points.size(); ++i) {
+            cacheMutexes[i].lock();
+        }
+        ready.unlock();
+        while (!stopThread) {
+            newPosition.lock();
+
+            // Find points that should be in the cache
+            std::unordered_set<Index> closest = {};
+            for (int i = 0; i < 4; ++i) {
+                closest.insert(findClosestExcept(lastPoint, closest));
+            }
+
+            // Add them to the cache
+            for (const auto &index : closest) {
+                if (!cache.count(index)) {
+                    load(index);
+                    cacheMutexes[index].unlock();
+                }
+            }
+
+            // Remove points that should not be in the cache
+            for (auto it = cache.begin(); it != cache.end(); ) {
+                if (!closest.count(it->first)) {
+                    cacheMutexes[it->first].lock();
+                    it = cache.erase(it);
+                } else {
+                    ++it;
+                }
+            }
+        }
     }
 
     std::pair<Grid::Point, cv::Mat> Grid::get(Point point) {
@@ -39,115 +85,36 @@ namespace panoramagrid {
             throw std::runtime_error("open() has not been called");
         }
 
-        std::vector<std::pair<Grid::Point, unsigned long>> points = list();
+        lastPoint = point;
+        newPosition.unlock();
 
-        zip_uint64_t closestIndex = 0;
-        Point closestPoint;
-        long closestSize = 0;
-        float closestDistance = std::numeric_limits<float>::max();
-        for (std::vector<Grid::Point>::size_type i = 0; i < points.size(); ++i) {
-            if (points[i].second == 0) {
-                continue;
-            }
-            Point current = points[i].first;
-            float distance = sqrtf(
-                    (current[0] - point[0]) * (current[0] - point[0])
-                    + (current[1] - point[1]) * (current[1] - point[1])
-                    + (current[2] - point[2]) * (current[2] - point[2])
-            );
-            if (distance < closestDistance) {
-                closestIndex = i;
-                closestPoint = current;
-                closestSize = points[i].second;
-                closestDistance = distance;
-            }
+        Index closest = findClosestExcept(point);
+
+        std::mutex &mutex = cacheMutexes[closest];
+
+        std::lock_guard<std::mutex> lock(ready);
+        if (mutex.try_lock()) {
+            const cv::Mat &mat = cache.at(closest);
+            mutex.unlock();
+
+            return {points[closest], mat};
         }
 
-        zip_file_t *file = zip_fopen_index(archive, closestIndex, 0);
-        if (file == nullptr) {
-            throw std::runtime_error(
-                    "Could not open file " + std::to_string(closestIndex) + ": " + std::string(zip_strerror(archive))
-            );
-        }
+        std::cerr << "Can't keep up with decoding images..." << std::endl;
 
-        std::vector<unsigned char> buffer(closestSize, '\0');
-        zip_int64_t bytesRead = zip_fread(file, buffer.data(), closestSize);
-        if (bytesRead != closestSize) {
-            throw std::runtime_error(
-                    "Error reading file" + std::to_string(closestIndex)
-                    + ": Read " + std::to_string(bytesRead) + " bytes instead of expected "
-                    + std::to_string(closestSize) + " bytes"
-            );
-        }
+        mutex.lock();
+        const cv::Mat &mat = cache.at(closest);
+        mutex.unlock();
 
-        //TODO: chceck for fail
-        zip_fclose(file);
-
-        cv::Mat mat = cv::imdecode(buffer, cv::IMREAD_UNCHANGED);
-        if (mat.data == nullptr) {
-            throw std::runtime_error("Could not decode file " + std::to_string(closestIndex));
-        }
-
-        return std::make_pair(closestPoint, mat);
+        return {points[closest], mat};
     }
 
-    unsigned long Grid::set(Point point, const cv::Mat &mat) {
+    std::vector<Grid::Point> Grid::list() {
         if (archive == nullptr) {
             throw std::runtime_error("open() has not been called");
-        }
-
-        std::vector<unsigned char> buffer;
-        if (!mat.empty()) {
-            if (!cv::imencode(".jpg", mat, buffer)) {
-                throw std::runtime_error("Could not encode file");
-            }
-        }
-
-        zip_source_t *source = zip_source_buffer(archive, buffer.data(), buffer.size(), 0);
-        if (source == nullptr) {
-            throw std::runtime_error("Could not create source: " + std::string(zip_strerror(archive)));
-        }
-
-        long index = zip_file_add(archive, pointToFilename(point).c_str(), source, ZIP_FL_OVERWRITE);
-        if (index == -1) {
-            zip_source_free(source);
-            throw std::runtime_error("Could not add file: " + std::string(zip_strerror(archive)));
-        }
-
-        return index;
-    }
-
-    std::vector<std::pair<Grid::Point, unsigned long>> Grid::list() {
-        if (archive == nullptr) {
-            throw std::runtime_error("open() has not been called");
-        }
-
-        auto entries = static_cast<zip_uint64_t>(zip_get_num_entries(archive, 0));
-        std::vector<std::pair<Grid::Point, unsigned long>> points(entries);
-        for (zip_uint64_t i = 0; i < entries; ++i) {
-            zip_stat_t sb;
-            if (zip_stat_index(archive, i, ZIP_STAT_NAME | ZIP_STAT_COMP_SIZE, &sb) != 0) {
-                throw std::runtime_error(
-                        "Could not info about file " + std::to_string(i) + ": " + std::string(zip_strerror(archive))
-                );
-            }
-
-            points[i] = std::make_pair(filenameToPoint(sb.name), sb.comp_size);
         }
 
         return points;
-    }
-
-    void Grid::remove(unsigned long index) {
-        if (archive == nullptr) {
-            throw std::runtime_error("open() has not been called");
-        }
-
-        if (zip_delete(archive, index) != 0) {
-            throw std::runtime_error(
-                    "Could not delete file " + std::to_string(index) + ": " + std::string(zip_strerror(archive))
-            );
-        }
     }
 
     Grid::Point Grid::filenameToPoint(std::string filename) {
@@ -164,6 +131,67 @@ namespace panoramagrid {
         std::stringstream ss;
         ss << point[0] << "_" << point[1] << "_" << point[2] << ".jpg";
         return ss.str();
+    }
+
+    Grid::Index Grid::findClosestExcept(Point point, const std::unordered_set<Index>& exceptions) {
+        Index closestIndex = 0;
+        float closestDistance = std::numeric_limits<float>::max();
+
+        for (Index i = 0; i < points.size(); ++i) {
+            if (exceptions.count(i)) {
+                continue;
+            }
+            Point current = points[i];
+            float distance = sqrtf(
+                    (current[0] - point[0]) * (current[0] - point[0])
+                    + (current[1] - point[1]) * (current[1] - point[1])
+                    + (current[2] - point[2]) * (current[2] - point[2])
+            );
+            if (distance < closestDistance) {
+                closestIndex = i;
+                closestDistance = distance;
+            }
+        }
+
+        return closestIndex;
+    }
+
+    void Grid::load(Index index) {
+        zip_file_t *file = zip_fopen_index(archive, index, 0);
+        if (file == nullptr) {
+            throw std::runtime_error(
+                    "Could not open file " + std::to_string(index) + ": " +
+                    std::string(zip_strerror(archive))
+            );
+        }
+
+        std::vector<unsigned char> buffer(sizes[index], '\0');
+        zip_int64_t bytesRead = zip_fread(file, buffer.data(), sizes[index]);
+        if (bytesRead != sizes[index]) {
+            throw std::runtime_error(
+                    "Error reading file" + std::to_string(index)
+                    + ": Read " + std::to_string(bytesRead) + " bytes instead of expected "
+                    + std::to_string(sizes[index]) + " bytes"
+            );
+        }
+
+        //TODO: chceck for fail
+        zip_fclose(file);
+
+        cache[index] = cv::imdecode(buffer, cv::IMREAD_UNCHANGED);
+        if (cache[index].data == nullptr) {
+            throw std::runtime_error("Could not decode file " + std::to_string(index));
+        }
+    }
+
+    void Grid::startThread() {
+        thread = std::thread([this]() {
+            this->cacheThread();
+        });
+    }
+
+    Grid::Grid() {
+        ready.lock();
     }
 
 }

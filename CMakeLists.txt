@@ -7,7 +7,7 @@ list(INSERT CMAKE_MODULE_PATH 0 ${CMAKE_SOURCE_DIR}/cmake)
 ##############################################
 # Declare dependencies
 
-find_package(Boost REQUIRED COMPONENTS python3 numpy3)
+find_package(Boost REQUIRED COMPONENTS python numpy)
 find_package(OpenCV REQUIRED COMPONENTS core imgcodecs)
 find_package(glfw3 REQUIRED)
 find_package(PythonLibs 3 REQUIRED)
@@ -46,6 +46,7 @@ target_include_directories(panoramagrid
 )
 target_compile_features(panoramagrid PRIVATE cxx_auto_type)
 target_compile_options(panoramagrid PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall>)
+set_property(TARGET panoramagrid PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_link_libraries(panoramagrid
     PUBLIC
         opencv_core
@@ -53,26 +54,7 @@ target_link_libraries(panoramagrid
         glfw
         zip
         glad
-)
-
-add_library(gridpy src/gridpy.cpp)
-set_target_properties(gridpy PROPERTIES PREFIX "")
-target_include_directories(gridpy
-    PUBLIC
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PRIVATE
-        ${PYTHON_INCLUDE_DIRS}
-)
-target_compile_features(gridpy PRIVATE cxx_auto_type)
-target_compile_options(gridpy PRIVATE $<$<CXX_COMPILER_ID:GNU>:-Wall>)
-target_link_libraries(gridpy
-    PUBLIC
-        Boost::python3
-        Boost::numpy3
-        opencv_core
-    PRIVATE
-        ${PYTHON_LIBRARIES}
+        pthread
 )
 
 ##############################################
@@ -81,7 +63,7 @@ target_link_libraries(gridpy
 include(GNUInstallDirs)
 set(INSTALL_CONFIGDIR ${CMAKE_INSTALL_LIBDIR}/cmake/Panoramagrid)
 
-install(TARGETS panoramagrid gridpy glad
+install(TARGETS panoramagrid glad
     EXPORT panoramagrid-targets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

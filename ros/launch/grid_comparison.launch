@@ -8,6 +8,7 @@
         name="gazebo"
         default="false"
     />
+    <env name="ROSCONSOLE_CONFIG_FILE" value="$(find panoramagrid)/config/rosconsole.conf"/>
 
     <node
         pkg="rviz"
@@ -25,9 +26,23 @@
         output="screen"
         if="$(arg run_node)"
     >
-        <param name="path" value="/usr/local/share/panoramagrid/grid2.zip" />
+        <param name="path" value="/usr/local/share/panoramagrid/grid2_lighter.zip" />
         <param name="global_frame" value="world" />
         <param name="gazebo" value="$(arg gazebo)" />
+        <param name="image_topic" value="image" />
+    </node>
+    <node
+        pkg="panoramagrid"
+        type="node"
+        name="panoramagrid_node2"
+        required="true"
+        output="screen"
+        if="$(arg run_node)"
+    >
+        <param name="path" value="/usr/local/share/panoramagrid/grid2_20cm_lighter.zip" />
+        <param name="global_frame" value="world" />
+        <param name="gazebo" value="$(arg gazebo)" />
+        <param name="image_topic" value="image2" />
     </node>
     <include if="$(arg gazebo)" file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find panoramagrid)/worlds/demo.world"/>

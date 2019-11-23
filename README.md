@@ -27,6 +27,7 @@ docker run \
     --env QT_X11_NO_MITSHM=1 \
     --device=/dev/dri:/dev/dri \
     --volume /tmp/.X11-unix:/tmp/.X11-unix:rw \
+    --volume ./ros:/root/catkin_ws/src/panoramagrid \
     --rm \
     --interactive \
     --tty \

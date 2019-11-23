@@ -18,7 +18,7 @@ if __name__ == '__main__':
     )
 
     interactive_marker = InteractiveMarker(
-        header=Header(frame_id="map"),
+        header=Header(frame_id="world"),
         name="interactive_marker",
         controls=[InteractiveMarkerControl(
             interaction_mode=InteractiveMarkerControl.MOVE_ROTATE_3D,
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     def process_feedback(feedback):
         broadcaster.sendTransform(
             TransformStamped(
-                header=Header(frame_id="map"),
+                header=Header(frame_id="world"),
                 child_frame_id='camera',
                 transform=Transform(
                     translation=feedback.pose.position,

@@ -1,4 +1,4 @@
-FROM osrf/ros:melodic-desktop-full-bionic
+FROM osrf/ros:melodic-desktop-full
 
 
 # Install dependencies
@@ -10,10 +10,26 @@ RUN set -ex && \
     unzip \
     libglfw3-dev \
     libglm-dev \
-    linux-tools-generic \
+#    linux-tools-generic \
     mercurial \
+    git \
+    vim \
   && rm -rf /var/lib/apt/lists/*
 
+# Install gazebo models
+RUN set -ex && \
+  mkdir /root/.gazebo && \
+  cd /root/.gazebo && \
+  hg clone https://bitbucket.org/osrf/gazebo_models models
+
+# Install rcprg_gazebo_utils
+RUN ["/bin/bash", "-c", "set -ex && \
+  source /opt/ros/melodic/setup.bash && \
+  mkdir -p /root/catkin_ws/src && \
+  cd /root/catkin_ws && \
+  git clone https://github.com/RCPRG-ros-pkg/rcprg_gazebo_utils.git src/rcprg_gazebo_utils && \
+  catkin_make \
+"]
 
 # Install panoramagrid
 
@@ -30,17 +46,10 @@ RUN set -ex && \
 
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
-# Install gazebo models
-RUN set -ex && \
-  mkdir /root/.gazebo && \
-  cd /root/.gazebo && \
-  hg clone https://bitbucket.org/osrf/gazebo_models models
-
 # Install panoramagrid ros package
 
 RUN ["/bin/bash", "-c", "set -ex && \
   source /opt/ros/melodic/setup.bash && \
-  mkdir -p /root/catkin_ws/src && \
   cd /root/catkin_ws && \
   cp -r /usr/local/src/panoramagrid/ros src/panoramagrid && \
   catkin_make \

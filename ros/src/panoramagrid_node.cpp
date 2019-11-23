@@ -32,15 +32,19 @@ public:
 
         ROS_INFO("Opening grid archive: %s", path.c_str());
         grid.open(path);
-        
+        grid.startThread();
+
         ROS_DEBUG("Initializing GLFW");
         pg::gl::applications::GlApplication::initGlfw();
 
         ROS_DEBUG("Creating a OpenGL context");
         initContext();
     }
+
     void parseArgs(int argc, char **argv) {};
+
     void run() {};
+
     void initContext() {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
@@ -70,40 +74,55 @@ public:
     }
 
     cv::Mat render(KDL::Frame frame) {
-        if (frame.p != cache.first.p || cache.second.empty()) {
-            setPosition(frame.p);
-            cache = std::make_pair(KDL::Frame(), cv::Mat());  // reset cache
-        }
-        if (frame.M != cache.first.M || cache.second.empty()) {
-            ROS_DEBUG("Cache miss: frame changed, rendering...");
-            setOrientation(frame.M);
-            cache.first = frame;
-            cache.second = render();
-        }
-        return cache.second;
+        setPosition(frame.p);
+        setOrientation(frame.M);
+        return render();
     }
+
     void setPosition(KDL::Vector position) {
-        cv::Mat img = grid.get({
+        if (position == lastFrame.p) {
+            return;
+        }
+        std::array<float, 3> rosPosition {
             static_cast<float>(position.x()),
             static_cast<float>(position.y()),
             static_cast<float>(position.z()),
-        }).second;
-        node->getMaterial()->setTexture(img);
-        getRenderer()->render(node);
-        getRenderer()->loadTexture(node->getMaterial());
+        };
+
+        auto start = std::chrono::high_resolution_clock::now();
+        auto gridRes = grid.get(rosPosition);
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - start);
+
+        if (abs(gridRes.first[0] - lastImage[0]) < 0.001 || abs(gridRes.first[1] - lastImage[1]) < 0.001 || abs(gridRes.first[2] - lastImage[2]) < 0.001) {
+            node->getMaterial()->setTexture(gridRes.second);
+            getRenderer()->render(node);
+            getRenderer()->loadTexture(node->getMaterial());
+            lastImage = gridRes.first;
+        }
+
+        float gain = 0.425;
+        std::array<float, 3> diff {
+            gain * (rosPosition[1] - gridRes.first[1]),
+            0.0,
+            -gain * (rosPosition[0] - gridRes.first[0]),
+        };
+        getRenderer()->getCamera()->setPosition(diff);
+        lastFrame.p = position;
     }
+
     void setOrientation(KDL::Rotation orientation) {
-       double roll, pitch, yaw;
-       double x, y, z, w;
-       orientation.GetQuaternion(x, y, z, w);
-       // Quaternion transformation ROS->OpenGL
-       renderer->getCamera()->setOrientation({
-            static_cast<float>(-y),
-            static_cast<float>(z),
-            static_cast<float>(x),
-            static_cast<float>(w),
-        });
+        double roll, pitch, yaw;
+        double x, y, z, w;
+        orientation.GetQuaternion(x, y, z, w);
+        // Quaternion transformation ROS->OpenGL
+        renderer->getCamera()->setOrientation({
+                                                      static_cast<float>(-y),
+                                                      static_cast<float>(z),
+                                                      static_cast<float>(x),
+                                                      static_cast<float>(w),
+                                              });
     }
+
     cv::Mat render() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         renderer->render(node);
@@ -116,8 +135,9 @@ private:
     int width, height;
     std::string path;
     std::shared_ptr<pg::Node> node = std::make_shared<pg::Node>(std::make_shared<pg::SphereMesh>(18, 36),
-        std::make_shared<pg::UvMaterial>());
-    std::pair<KDL::Frame, cv::Mat> cache;
+                                                                std::make_shared<pg::UvMaterial>());
+    KDL::Frame lastFrame;
+    std::array<float, 3> lastImage;
 };
 
 int main(int argc, char *argv[]) {
@@ -128,83 +148,102 @@ int main(int argc, char *argv[]) {
     tf2_ros::TransformListener tfListener(tfBuffer);
     cv::Mat gazebo_img;
 
+    std::string image_topic;
+    nh.param<std::string>("image_topic", image_topic, "image");
+
     image_transport::ImageTransport it(nh);
-    image_transport::Publisher pub = it.advertise("image", 1);
-    image_transport::Subscriber sub = it.subscribe("/gazebo_camera/image_raw", 1, [&](const sensor_msgs::ImageConstPtr &msg) {
-        gazebo_img = cv_bridge::toCvShare(msg, "bgr8")->image;
-    });
+    image_transport::Publisher pub = it.advertise(image_topic, 1);
+    image_transport::Subscriber sub;
+
+    bool gazebo;
+    nh.param<bool>("gazebo", gazebo, false);
+
+    if (gazebo) {
+        sub = it.subscribe("/gazebo_camera/image_raw", 1, [&](const sensor_msgs::ImageConstPtr &msg) {
+            gazebo_img = cv_bridge::toCvShare(msg, "bgr8")->image;
+        });
+    }
 
     PanoramagridRosBridge pg(nh);
 
     // Spawn markers
     ros::Publisher cubemapMarkerPub = nh.advertise<visualization_msgs::Marker>("cubemap_marker", 0, true);
     visualization_msgs::Marker cubemapMarker;
-    cubemapMarker.header.frame_id = "map";
+    cubemapMarker.header.frame_id = "world";
     cubemapMarker.header.stamp = ros::Time();
     cubemapMarker.type = visualization_msgs::Marker::POINTS;
     cubemapMarker.action = visualization_msgs::Marker::ADD;
-    cubemapMarker.scale.x = 0.1;
-    cubemapMarker.scale.y = 0.1;
-    cubemapMarker.color.r = 1.0;
-    cubemapMarker.color.g = 0.0;
+    cubemapMarker.scale.x = 0.01;
+    cubemapMarker.scale.y = 0.01;
+    cubemapMarker.color.r = 0.0;
+    cubemapMarker.color.g = 1.0;
     cubemapMarker.color.b = 0.0;
-    cubemapMarker.color.a = 1.0;
+    cubemapMarker.color.a = 0.5;
     for (const auto &entry : pg.grid.list()) {
         geometry_msgs::Point point;
-        point.x = entry.first[0];
-        point.y = entry.first[1];
-        point.z = entry.first[2];
+        point.x = entry[0];
+        point.y = entry[1];
+        point.z = entry[2];
         cubemapMarker.points.push_back(point);
     }
 
     std::string globalFrame, cameraFrame;
-    nh.param<std::string>("global_frame", globalFrame, "map");
+    nh.param<std::string>("global_frame", globalFrame, "world");
     nh.param<std::string>("camera_frame", cameraFrame, "camera");
-    
+
     float fps;
     nh.param<float>("fps", fps, 60);
 
     ROS_INFO("Tracking transform %s -> %s, waiting for first change...", globalFrame.c_str(), cameraFrame.c_str());
-    while (!tfBuffer.canTransform(globalFrame, cameraFrame, ros::Time(0)) && nh.ok()) { ros::Duration(1 / fps).sleep(); };
+    while (!tfBuffer.canTransform(globalFrame, cameraFrame, ros::Time(0)) && nh.ok()) {
+        ros::Duration(1 / fps).sleep();
+    };
 
     ROS_INFO("Running with target FPS: %.2f", fps);
     ros::Rate rate(fps);
     cv::TickMeter meter;
     while (nh.ok()) {
-        meter.stop(); meter.start();
+        meter.stop();
+        meter.start();
 
         cubemapMarkerPub.publish(cubemapMarker);
 
         if (meter.getCounter() > static_cast<int>(fps)) {
-            ROS_INFO("%d transforms processed, avg. FPS: %.2f", static_cast<int>(fps), meter.getCounter() / meter.getTimeSec());
+            ROS_DEBUG("%d transforms processed, avg. FPS: %.2f", static_cast<int>(fps),
+                     meter.getCounter() / meter.getTimeSec());
             meter.reset();
         }
 
-        if (gazebo_img.empty()) {
+        if (gazebo && gazebo_img.empty()) {
             ros::spinOnce();
             rate.sleep();
             continue;
         }
 
         try {
-            geometry_msgs::TransformStamped transformStamped = tfBuffer.lookupTransform(globalFrame, cameraFrame, ros::Time(0));
+            geometry_msgs::TransformStamped transformStamped = tfBuffer.lookupTransform(globalFrame, cameraFrame,
+                                                                                        ros::Time(0));
             KDL::Frame frame = tf2::transformToKDL(transformStamped);
-            cv::Mat img = pg.render(frame).clone();
 
-	    // TODO: way too slow
-	    for (int i = 0; i < img.rows; ++i) {
-                for (int j = 0; j < img.cols; ++j) {
-                    const cv::Vec3b& pixel = gazebo_img.at<cv::Vec3b>(i, j);
-		    if (!(pixel[0] == 178 && pixel[1] == 178 && pixel[2] == 178)) {
-			img.at<cv::Vec3b>(i, j) = pixel;
-		    }
-		}
-	    }
+            if (gazebo) {
+                cv::Mat img = pg.render(frame).clone();
 
-            pub.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg());
+                for (int i = 0; i < img.rows; ++i) {
+                    for (int j = 0; j < img.cols; ++j) {
+                        const cv::Vec3b &pixel = gazebo_img.at<cv::Vec3b>(i, j);
+                        if (!(pixel[0] == 178 && pixel[1] == 178 && pixel[2] == 178)) {
+                            img.at<cv::Vec3b>(i, j) = pixel;
+                        }
+                    }
+                }
+
+                pub.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg());
+            } else {
+                pub.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", pg.render(frame)).toImageMsg());
+            }
         } catch (tf2::TransformException &ex) {
             ROS_WARN("Transform exception: %s", ex.what());
-	    }
+        }
 
         ros::spinOnce();
         rate.sleep();
