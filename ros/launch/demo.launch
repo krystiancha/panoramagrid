@@ -1,4 +1,6 @@
 <launch>
+    <env name="GAZEBO_MODEL_PATH" value="$(find panoramagrid)/models:$(find tiago_sim_integration)/models:$(optenv GAZEBO_MODEL_PATH)"/>
+
     <arg
         name="run_node"
         default="true"
@@ -19,21 +21,30 @@
     />
     <node
         pkg="panoramagrid"
+        type="interactive_marker"
+        name="interactive_marker"
+        required="true"
+        output="screen"
+    />
+    <node
+        pkg="panoramagrid"
         type="node"
         name="panoramagrid_node"
         required="true"
         output="screen"
         if="$(arg run_node)"
     >
-        <param name="path" value="/usr/local/share/panoramagrid/grid2.zip" />
+        <param name="path" value="/usr/local/share/panoramagrid/grid3.zip" />
         <param name="global_frame" value="world" />
         <param name="gazebo" value="$(arg gazebo)" />
     </node>
     <include if="$(arg gazebo)" file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="world_name" value="$(find panoramagrid)/worlds/demo.world"/>
+        <arg name="world_name" value="$(find panoramagrid)/worlds/lab_012_v2.world"/>
     </include>
     <include if="$(arg gazebo)" file="$(find rcprg_gazebo_utils)/launch/gazebo_publish_ros_tf_object.launch">
-        <arg name="link_name" value="camera::link"/>
+        <arg name="link_name" value="static_camera::link"/>
 	    <arg name="frame_id" value="camera"/>
     </include>
+    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 world grid 100"
+     />
 </launch>

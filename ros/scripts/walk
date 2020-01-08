@@ -11,7 +11,7 @@ from tf2_ros import TransformBroadcaster
 
 
 class Walk:
-    def __init__(self, start_point, radius, rate=30, speed=1):
+    def __init__(self, start_point, radius, rate=30, t_speed=0.2, r_speed=0.6):
         init_node("walk")
         self.broadcaster = TransformBroadcaster()
         self.r = Rate(rate)
@@ -19,13 +19,14 @@ class Walk:
         self.start_point = start_point
         self.radius = radius
         self.rate = rate
-        self.speed = speed
+        self.t_speed = t_speed
+        self.r_speed = r_speed
 
     def circle_point(self):
         for displacement in self.gen_points(0, self.radius):
             self._apply(displacement, 0)
 
-        for angle in self.gen_points(0, 2 * pi, angle=True):
+        for angle in np.linspace(0, 2 * pi, self.num_t(self.radius * 2 * pi)):
             x = self.radius * np.cos(angle)
             y = self.radius * np.sin(angle)
             self._apply(x, y, 0, np.arctan2(0 - y, 1 - x))
@@ -37,100 +38,97 @@ class Walk:
             self._apply(displacement, 0, 0, pi)
 
         for rotation in self.gen_points(pi, 0, angle=True):
-            angle = rotation
-            self._apply(0, 0, 0, angle)
+            self._apply(0, 0, 0, rotation)
 
     def merry(self):
         for displacement in self.gen_points(0, self.radius):
             self._apply(displacement, 0)
 
         for rotation in self.gen_points(0, pi, angle=True):
-            angle = rotation
-            self._apply(self.radius, 0, 0, angle)
+            self._apply(self.radius, 0, 0, rotation)
 
-        for angle in np.linspace(0, 2 * pi, 2 * pi * self.rate):
+        for angle in np.linspace(0, 2 * pi, self.num_t(self.radius * 2 * pi)):
             self._apply(self.radius * np.cos(angle), self.radius * np.sin(angle), 0, angle + pi)
 
-        for displacement in np.linspace(self.radius, 0, self.rate):
+        for displacement in self.gen_points(self.radius, 0):
             self._apply(displacement, 0, 0, pi)
 
-        for rotation in np.linspace(pi, 0, 2 * self.rate):
-            angle = rotation
-            self._apply(0, 0, 0, angle)
+        for rotation in self.gen_points(pi, 0, angle=True):
+            self._apply(0, 0, 0, rotation)
 
     def square(self):
         x, y = (0, 0)
         angle = 0
 
-        for displacement in np.linspace(0, self.radius, self.rate / self.speed):
+        for displacement in self.gen_points(0, self.radius):
             x = displacement
             self._apply(x, y, 0, angle)
 
-        for rotation in np.linspace(0, pi / 2, self.rate / self.speed):
+        for rotation in self.gen_points(0, pi / 2, angle=True):
             angle = rotation
             self._apply(x, y, 0, angle)
 
-        for displacement in np.linspace(0, self.radius, self.rate / self.speed):
+        for displacement in self.gen_points(0, self.radius):
             y = displacement
             self._apply(x, y, 0, angle)
 
-        for rotation in np.linspace(pi / 2, pi, self.rate / self.speed):
+        for rotation in self.gen_points(pi / 2, pi, angle=True):
             angle = rotation
             self._apply(x, y, 0, angle)
 
-        for displacement in np.linspace(self.radius, -self.radius, 2 * self.rate / self.speed):
+        for displacement in self.gen_points(self.radius, -self.radius):
             x = displacement
             self._apply(x, y, 0, angle)
 
-        for rotation in np.linspace(pi, 3 * pi / 2, self.rate / self.speed):
+        for rotation in self.gen_points(pi, 3 * pi / 2, angle=True):
             angle = rotation
             self._apply(x, y, 0, angle)
 
-        for displacement in np.linspace(self.radius, -self.radius, 2 * self.rate / self.speed):
+        for displacement in self.gen_points(self.radius, -self.radius):
             y = displacement
             self._apply(x, y, 0, angle)
 
-        for rotation in np.linspace(3 * pi / 2, 2 * pi, self.rate / self.speed):
+        for rotation in self.gen_points(3 * pi / 2, 2 * pi, angle=True):
             angle = rotation
             self._apply(x, y, 0, angle)
 
-        for displacement in np.linspace(-self.radius, self.radius, 2 * self.rate / self.speed):
+        for displacement in self.gen_points(-self.radius, self.radius):
             x = displacement
             self._apply(x, y, 0, angle)
 
-        for rotation in np.linspace(2 * pi, 5 * pi / 2, self.rate / self.speed):
+        for rotation in self.gen_points(2 * pi, 5 * pi / 2, angle=True):
             angle = rotation
             self._apply(x, y, 0, angle)
 
-        for displacement in np.linspace(-self.radius, 0, self.rate / self.speed):
+        for displacement in self.gen_points(-self.radius, 0):
             y = displacement
             self._apply(x, y, 0, angle)
 
-        for rotation in np.linspace(5 * pi / 2, 3 * pi, self.rate / self.speed):
+        for rotation in self.gen_points(5 * pi / 2, 3 * pi, angle=True):
             angle = rotation
             self._apply(x, y, 0, angle)
 
-        for displacement in np.linspace(self.radius, 0, self.rate / self.speed):
+        for displacement in self.gen_points(self.radius, 0):
             x = displacement
             self._apply(x, y, 0, angle)
 
-        for rotation in np.linspace(3 * pi, 4 * pi, 2 * self.rate / self.speed):
+        for rotation in self.gen_points(3 * pi, 4 * pi, angle=True):
             angle = rotation
             self._apply(x, y, 0, angle)
 
         return True
 
-    def num_distance(self, distance):
-        return self.rate * distance / self.speed
-
-    def num_angle(self, angle):
-        return self.num_distance(self.radius * angle / 2 * pi)
+    def num_t(self, distance):
+        return self.rate * distance / self.t_speed
+    
+    def num_r(self, angle):
+        return self.rate * angle / self.r_speed
     
     def gen_points(self, start, end, angle=False):
         if angle:
-            return np.linspace(start, end, self.num_angle(abs(end - start)))
+            return np.linspace(start, end, self.num_r(abs(end - start)))
         
-        return np.linspace(start, end, self.num_distance(abs(end - start)))
+        return np.linspace(start, end, self.num_t(abs(end - start)))
 
     def _apply(self, x, y, z=0.0, angle=0.0):
         if is_shutdown():
@@ -157,7 +155,8 @@ if __name__ == '__main__':
 
     parser = ArgumentParser()
     parser.add_argument('-1', '--once', action='store_true')
-    parser.add_argument('-s', '--speed', type=float, default=1.0)
+    parser.add_argument('-t', '--tspeed', type=float, default=0.2)
+    parser.add_argument('-r', '--rspeed', type=float, default=0.6)
     subparsers = parser.add_subparsers()
 
     spiral = subparsers.add_parser('square')
@@ -171,7 +170,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    walk.speed = args.speed
+    walk.t_speed = args.tspeed
+    walk.r_speed = args.rspeed
 
     while True:
         if not args.func() or args.once:

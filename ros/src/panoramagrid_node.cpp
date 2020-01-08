@@ -187,15 +187,16 @@ int main(int argc, char *argv[]) {
         cubemapMarker.points.push_back(point);
     }
 
-    std::string globalFrame, cameraFrame;
+    std::string globalFrame, cameraFrame, gridFrame;
     nh.param<std::string>("global_frame", globalFrame, "world");
     nh.param<std::string>("camera_frame", cameraFrame, "camera");
+    nh.param<std::string>("grid_frame", gridFrame, "grid");
 
     float fps;
     nh.param<float>("fps", fps, 60);
 
     ROS_INFO("Tracking transform %s -> %s, waiting for first change...", globalFrame.c_str(), cameraFrame.c_str());
-    while (!tfBuffer.canTransform(globalFrame, cameraFrame, ros::Time(0)) && nh.ok()) {
+    while (!tfBuffer.canTransform(globalFrame, cameraFrame, ros::Time(0)) && !tfBuffer.canTransform(globalFrame, gridFrame, ros::Time(0)) && nh.ok()) {
         ros::Duration(1 / fps).sleep();
     };
 
@@ -209,7 +210,7 @@ int main(int argc, char *argv[]) {
         cubemapMarkerPub.publish(cubemapMarker);
 
         if (meter.getCounter() > static_cast<int>(fps)) {
-            ROS_DEBUG("%d transforms processed, avg. FPS: %.2f", static_cast<int>(fps),
+            ROS_INFO("%d transforms processed, avg. FPS: %.2f", static_cast<int>(fps),
                      meter.getCounter() / meter.getTimeSec());
             meter.reset();
         }
@@ -225,17 +226,25 @@ int main(int argc, char *argv[]) {
                                                                                         ros::Time(0));
             KDL::Frame frame = tf2::transformToKDL(transformStamped);
 
-            if (gazebo) {
-                cv::Mat img = pg.render(frame).clone();
+            geometry_msgs::TransformStamped gridTransformStamped = tfBuffer.lookupTransform(globalFrame, gridFrame,
+                                                                                        ros::Time(0));
+            KDL::Frame gridFrame = tf2::transformToKDL(gridTransformStamped);
 
-                for (int i = 0; i < img.rows; ++i) {
-                    for (int j = 0; j < img.cols; ++j) {
-                        const cv::Vec3b &pixel = gazebo_img.at<cv::Vec3b>(i, j);
-                        if (!(pixel[0] == 178 && pixel[1] == 178 && pixel[2] == 178)) {
-                            img.at<cv::Vec3b>(i, j) = pixel;
-                        }
-                    }
-                }
+            if (gazebo) {
+                cv::Mat img = pg.render(gridFrame * frame).clone();
+                cv::Mat mask;
+                cv::inRange(gazebo_img, cv::Scalar(178, 178, 178), cv::Scalar(178, 178, 178), mask);
+                cv::bitwise_not(mask, mask);
+                gazebo_img.copyTo(img, mask);
+
+//                for (int i = 0; i < img.rows; ++i) {
+//                    for (int j = 0; j < img.cols; ++j) {
+//                        const cv::Vec3b &pixel = gazebo_img.at<cv::Vec3b>(i, j);
+//                        if (!(pixel[0] == 178 && pixel[1] == 178 && pixel[2] == 178)) {
+//                            img.at<cv::Vec3b>(i, j) = pixel;
+//                        }
+//                    }
+//                }
 
                 pub.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg());
             } else {

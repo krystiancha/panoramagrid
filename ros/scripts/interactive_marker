@@ -4,7 +4,7 @@ from interactive_markers.interactive_marker_server import InteractiveMarkerServe
 from rospy import init_node, spin
 from std_msgs.msg import ColorRGBA, Header
 from tf2_ros import TransformBroadcaster
-from visualization_msgs.msg import InteractiveMarker, Marker, InteractiveMarkerControl
+from visualization_msgs.msg import InteractiveMarker, Marker, InteractiveMarkerControl, InteractiveMarkerFeedback
 
 if __name__ == '__main__':
     init_node("interactive_marker")
@@ -61,7 +61,7 @@ if __name__ == '__main__':
         broadcaster.sendTransform(
             TransformStamped(
                 header=Header(frame_id="world"),
-                child_frame_id='camera',
+                child_frame_id='room',
                 transform=Transform(
                     translation=feedback.pose.position,
                     rotation=feedback.pose.orientation,
@@ -73,5 +73,6 @@ if __name__ == '__main__':
     server.insert(interactive_marker, process_feedback)
     server.applyChanges()
 
+    process_feedback(InteractiveMarkerFeedback())
     spin()
 

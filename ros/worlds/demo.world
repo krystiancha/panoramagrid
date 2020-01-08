@@ -153,12 +153,12 @@
           </surface>
         </collision>
         <visual name='visual'>
+          <!--<plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>-->
           <geometry>
             <mesh>
               <uri>model://cafe_table/meshes/cafe_table.dae</uri>
             </mesh>
           </geometry>
-          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <self_collide>0</self_collide>
         <enable_wind>0</enable_wind>
@@ -324,15 +324,15 @@
       <pose frame=''>-0.023184 0.072379 -0.25 0 -0 0</pose>
     </model>
     <state world_name='default'>
-      <sim_time>330 179000000</sim_time>
-      <real_time>112 692121358</real_time>
-      <wall_time>1570642360 803156302</wall_time>
-      <iterations>73686</iterations>
+      <sim_time>710 814000000</sim_time>
+      <real_time>453 461570933</real_time>
+      <wall_time>1575120405 313070152</wall_time>
+      <iterations>380635</iterations>
       <model name='cafe_table'>
-        <pose frame=''>2 0 0 0 -0 0</pose>
+        <pose frame=''>2.18177 0.655259 -0.631246 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>2 0 0 0 -0 0</pose>
+          <pose frame=''>2.18177 0.655259 -0.631246 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -349,23 +349,23 @@
         </link>
       </model>
       <model name='camera'>
-        <pose frame=''>-0.00011 4.7e-05 0.824997 5.3e-05 -1e-05 0.001891</pose>
+        <pose frame=''>0 -0 0.825 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='camera::link'>
-          <pose frame=''>-0.00011 4.7e-05 0.824997 5.3e-05 -1e-05 0.001891</pose>
-          <velocity>-0.000501 -0.002675 -0.003081 0.053495 -0.010025 0</velocity>
-          <acceleration>0 0 -9.8 -0 -0 -0</acceleration>
-          <wrench>0 0 -0.98 0 -0 0</wrench>
+          <pose frame=''>0 -0 0.825 0 -0 0</pose>
+          <velocity>0 -0 0 0 -0 0</velocity>
+          <acceleration>-0 0 0 0 -0 0</acceleration>
+          <wrench>-0 0 0 0 -0 0</wrench>
         </link>
       </model>
       <model name='coke_can'>
-        <pose frame=''>1.64974 -0.321866 0.772423 -0.00768 0.002741 1.12052</pose>
+        <pose frame=''>2.46029 0.853593 0.140468 0.02644 -0.021467 0.014392</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>1.64974 -0.321866 0.772423 -0.00768 0.002741 1.12052</pose>
+          <pose frame=''>2.46029 0.853593 0.140468 0.02644 -0.021467 0.014392</pose>
           <velocity>0 0 0 0 -0 0</velocity>
-          <acceleration>0.050571 -0.047957 0.005871 0.831561 0.8787 -0.112306</acceleration>
-          <wrench>0.019723 -0.018703 0.00229 0 -0 0</wrench>
+          <acceleration>-3.8e-05 -0.000205 -2.6e-05 0.003601 -0.000719 0.000158</acceleration>
+          <wrench>-1.5e-05 -8e-05 -1e-05 0 -0 0</wrench>
         </link>
       </model>
       <model name='ground_plane'>
@@ -384,7 +384,7 @@
     </state>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose frame=''>-0.951971 -0.273045 2.48465 0 0.479643 -0.087812</pose>
+        <pose frame=''>0.579522 2.33031 2.76565 0 0.917796 -0.655813</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
