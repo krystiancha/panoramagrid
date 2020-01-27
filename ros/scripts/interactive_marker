@@ -61,7 +61,7 @@ if __name__ == '__main__':
         broadcaster.sendTransform(
             TransformStamped(
                 header=Header(frame_id="world"),
-                child_frame_id='room',
+                child_frame_id='camera',
                 transform=Transform(
                     translation=feedback.pose.position,
                     rotation=feedback.pose.orientation,

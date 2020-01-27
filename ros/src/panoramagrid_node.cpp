@@ -236,19 +236,9 @@ int main(int argc, char *argv[]) {
                 cv::inRange(gazebo_img, cv::Scalar(178, 178, 178), cv::Scalar(178, 178, 178), mask);
                 cv::bitwise_not(mask, mask);
                 gazebo_img.copyTo(img, mask);
-
-//                for (int i = 0; i < img.rows; ++i) {
-//                    for (int j = 0; j < img.cols; ++j) {
-//                        const cv::Vec3b &pixel = gazebo_img.at<cv::Vec3b>(i, j);
-//                        if (!(pixel[0] == 178 && pixel[1] == 178 && pixel[2] == 178)) {
-//                            img.at<cv::Vec3b>(i, j) = pixel;
-//                        }
-//                    }
-//                }
-
                 pub.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", img).toImageMsg());
             } else {
-                pub.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", pg.render(frame)).toImageMsg());
+                pub.publish(cv_bridge::CvImage(std_msgs::Header(), "bgr8", pg.render(gridFrame * frame)).toImageMsg());
             }
         } catch (tf2::TransformException &ex) {
             ROS_WARN("Transform exception: %s", ex.what());

@@ -28,6 +28,7 @@ RUN ["/bin/bash", "-c", "set -ex && \
   mkdir -p /root/catkin_ws/src && \
   cd /root/catkin_ws && \
   git clone https://github.com/RCPRG-ros-pkg/rcprg_gazebo_utils.git src/rcprg_gazebo_utils && \
+  git clone https://github.com/RCPRG-ros-pkg/tiago_sim_integration.git src/tiago_sim_integration && \
   catkin_make \
 "]
 

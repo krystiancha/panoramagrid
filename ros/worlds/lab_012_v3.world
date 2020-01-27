@@ -54,6 +54,7 @@
               <name>Gazebo/Grey</name>
             </script>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
@@ -82,10 +83,10 @@
       <heading_deg>0</heading_deg>
     </spherical_coordinates>
     <state world_name='default'>
-      <sim_time>1476 855000000</sim_time>
-      <real_time>25 730015770</real_time>
-      <wall_time>1575915088 343005571</wall_time>
-      <iterations>23226</iterations>
+      <sim_time>1591 929000000</sim_time>
+      <real_time>106 29303095</real_time>
+      <wall_time>1579727907 782678078</wall_time>
+      <iterations>64420</iterations>
       <model name='012'>
         <pose frame=''>4e-06 -0 0 0 -0 1.57079</pose>
         <scale>1 1 1</scale>
@@ -385,10 +386,10 @@
         </link>
       </model>
       <model name='rectangle_table_clone_0'>
-        <pose frame=''>0.586171 -5.67186 0.1 0 -0 0</pose>
+        <pose frame=''>0.586171 -5.67186 -0.524969 0 -0 0</pose>
         <scale>1 1 1</scale>
         <link name='rectangle_table'>
-          <pose frame=''>0.586171 -5.67186 0.1 0 -0 0</pose>
+          <pose frame=''>0.586171 -5.67186 -0.524969 0 -0 0</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -415,10 +416,10 @@
         </link>
       </model>
       <model name='static_camera'>
-        <pose frame=''>-0.687897 -4.29106 1.63496 0 -0 0</pose>
+        <pose frame=''>0.703937 -4.339 1.55618 -0.035096 0.53693 -1.74365</pose>
         <scale>1 1 1</scale>
         <link name='link'>
-          <pose frame=''>-0.687897 -4.29106 1.63496 0 -0 0</pose>
+          <pose frame=''>0.703937 -4.339 1.55618 -0.035096 0.53693 -1.74365</pose>
           <velocity>0 0 0 0 -0 0</velocity>
           <acceleration>0 0 0 0 -0 0</acceleration>
           <wrench>0 0 0 0 -0 0</wrench>
@@ -676,6 +677,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <pose frame=''>-6.175 0 0 0 -0 1.5708</pose>
         <self_collide>0</self_collide>
@@ -699,6 +701,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_0'>
           <geometry>
@@ -735,6 +738,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_1'>
           <geometry>
@@ -771,6 +775,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_2'>
           <geometry>
@@ -807,6 +812,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_3'>
           <geometry>
@@ -843,6 +849,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_4'>
           <geometry>
@@ -879,6 +886,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_5'>
           <geometry>
@@ -915,6 +923,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_6'>
           <geometry>
@@ -951,6 +960,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_7'>
           <geometry>
@@ -987,6 +997,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_8'>
           <geometry>
@@ -1023,6 +1034,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_9'>
           <geometry>
@@ -1059,6 +1071,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_10'>
           <geometry>
@@ -1095,6 +1108,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_11'>
           <geometry>
@@ -1131,6 +1145,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_12'>
           <geometry>
@@ -1167,6 +1182,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_1_Collision_13'>
           <geometry>
@@ -1230,6 +1246,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <pose frame=''>6.175 0 0 0 0 -1.5708</pose>
         <self_collide>0</self_collide>
@@ -1253,6 +1270,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_3_Collision_0'>
           <geometry>
@@ -1289,6 +1307,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_3_Collision_1'>
           <geometry>
@@ -1325,6 +1344,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Wall_3_Collision_2'>
           <geometry>
@@ -1410,6 +1430,7 @@
             </script>
             <ambient>0.921569 0.807843 0.615686 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Stairs_5_Collision_0'>
           <geometry>
@@ -1456,6 +1477,7 @@
             </script>
             <ambient>0.921569 0.807843 0.615686 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <collision name='Stairs_3_Collision_0'>
           <geometry>
@@ -1523,6 +1545,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <pose frame=''>0 0 0 0 -0 0</pose>
         <self_collide>0</self_collide>
@@ -1570,6 +1593,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <pose frame=''>0 0 0 0 -0 0</pose>
         <self_collide>0</self_collide>
@@ -1617,6 +1641,7 @@
             </script>
             <ambient>1 1 1 1</ambient>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <pose frame=''>0 0 0 0 -0 0</pose>
         <self_collide>0</self_collide>
@@ -2305,6 +2330,7 @@
               <name>Chair/Wood</name>
             </script>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
@@ -2626,7 +2652,7 @@
     </model>
     <gui fullscreen='0'>
       <camera name='user_camera'>
-        <pose frame=''>2.44495 2.61372 16.5846 0 1.5698 3.13796</pose>
+        <pose frame=''>2.03133 -3.69095 4.6119 -0 1.4698 -3.08122</pose>
         <view_controller>orbit</view_controller>
         <projection_type>perspective</projection_type>
       </camera>
@@ -3385,6 +3411,7 @@
               <scale>1 1 1</scale>
             </mesh>
           </geometry>
+            <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
@@ -3433,6 +3460,7 @@
               <name>Swivel_chair/Fabric</name>
             </script>
           </material>
+          <plugin name='panoramagrid' filename='libgazebo_hide_plugin.so'/>
         </visual>
         <self_collide>0</self_collide>
         <kinematic>0</kinematic>
@@ -4793,7 +4821,7 @@
         </visual>
         <sensor name='camera' type='camera'>
           <camera name='__default__'>
-            <horizontal_fov>1.57</horizontal_fov>
+            <horizontal_fov>1.047</horizontal_fov>
             <image>
               <width>1920</width>
               <height>1080</height>

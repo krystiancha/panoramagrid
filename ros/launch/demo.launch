@@ -34,17 +34,23 @@
         output="screen"
         if="$(arg run_node)"
     >
-        <param name="path" value="/usr/local/share/panoramagrid/grid3.zip" />
+        <param name="path" value="/usr/local/share/panoramagrid/images.zip" />
         <param name="global_frame" value="world" />
-        <param name="gazebo" value="$(arg gazebo)" />
+        <!--><param name="gazebo" value="$(arg gazebo)" />-->
+        <param name="gazebo" value="false" />
+        <param name="width" value="1920" />
+        <param name="height" value="1080" />
+        <param name="fov" value="1.57" />
     </node>
     <include if="$(arg gazebo)" file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find panoramagrid)/worlds/lab_012_v2.world"/>
     </include>
-    <include if="$(arg gazebo)" file="$(find rcprg_gazebo_utils)/launch/gazebo_publish_ros_tf_object.launch">
+    <!--<include if="$(arg gazebo)" file="$(find rcprg_gazebo_utils)/launch/gazebo_publish_ros_tf_object.launch">
         <arg name="link_name" value="static_camera::link"/>
 	    <arg name="frame_id" value="camera"/>
-    </include>
-    <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 world grid 100"
-     />
+    </include>-->
+    <!--><node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="-0.5 -3 0 1.57 0 0 world grid 100"
+     />-->
+     <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 world grid 100"
+      />
 </launch>
