@@ -15,6 +15,12 @@ A library for visualizing, manipulating and searching grids of panoramic images.
 
 Docker is used as a platform to run demos.
 
+## Build the image
+
+```bash
+docker build -t krystianch/panoramagrid .
+```
+
 ## Run the container
 
 ```bash
@@ -27,21 +33,36 @@ docker run \
     --env QT_X11_NO_MITSHM=1 \
     --device=/dev/dri:/dev/dri \
     --volume /tmp/.X11-unix:/tmp/.X11-unix:rw \
-    --volume ./ros:/root/catkin_ws/src/panoramagrid \
+    --volume $(pwd)/ros:/root/catkin_ws/src/panoramagrid \
     --rm \
     --interactive \
     --tty \
-    protecto/panoramagrid
+    krystianch/panoramagrid
 
 xhost -local:panoramagrid
 ```
 
-### Try some examples
+## Download the image set (1.6 GB)
+
+```bash
+curl -o images.zip https://protecto-static.s3.eu-central-1.amazonaws.com/images.zip
+```
+
+And copy the image set to the running container:
+
+```bash
+docker cp images.zip panoramagrid:/usr/local/share/panoramagrid/images.zip
+```
+
+## Try some examples
 
 ```bash
 # While in the container...
 
 # Run the ROS demo
+# After running this command, RViz will launch.
+# In order to control the camera add an interactive marker.
+# Displays -> Add -> By topic -> /simple_marker -> /update -> InteractiveMarkers
 roslaunch panoramagrid demo.launch
 
 # Preview an equirectangular projection as a perspective view
