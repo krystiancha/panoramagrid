@@ -20,7 +20,7 @@ RUN set -ex && \
 RUN set -ex && \
   mkdir /root/.gazebo && \
   cd /root/.gazebo && \
-  hg clone https://bitbucket.org/osrf/gazebo_models models
+  git clone https://github.com/osrf/gazebo_models.git models
 
 # Install rcprg_gazebo_utils
 RUN ["/bin/bash", "-c", "set -ex && \
